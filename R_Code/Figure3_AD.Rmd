@@ -1,0 +1,336 @@
+---
+title: "Figure3"
+author: "Andrew Dominguez"
+date: "7/30/2020"
+output: html_document
+---
+
+```{r}
+setwd("~/Manuscript.Figures")
+```
+
+
+```{r}
+otu = read.table(file="files/FungiAD.otu_table.txt", header=T, sep='\t',row.names = 1)
+head(otu)
+dim(otu)
+
+tax <- read.table(file="files/FungiAD.ASVs.taxonomy.fix.txt", sep='\t', header=TRUE,row.names = 1)
+head(tax)
+
+dim(tax)
+
+taxmat <- as(tax,"matrix")
+head(taxmat)
+
+TAX = tax_table(taxmat)
+
+otumat <- as(as.matrix(otu), "matrix")
+mode(otumat) <- "numeric"
+OTU = otu_table(otumat, taxa_are_rows = TRUE)
+
+otumat
+
+meta0 = read.table("files/Andrew_ITS.mapping_file.txt",
+                  header=TRUE,row.names=1,
+                  sep="\t",stringsAsFactors=FALSE)
+meta0
+
+sampleData <- sample_data(meta0)
+
+
+physeq = phyloseq(OTU,TAX,sampleData)
+
+
+
+physeq
+
+
+physeq.prune = prune_taxa(taxa_sums(physeq) > 0, physeq)
+physeq
+
+readcount = data.table(as(sample_data(physeq.prune), "data.frame"),
+                 TotalReads = sample_sums(physeq.prune), 
+                 keep.rownames = TRUE)
+setnames(readcount, "rn", "SampleID")
+
+
+readcount = readcount[order(readcount$TotalReads), c("SampleID", "TotalReads")]
+head(readcount)
+
+set.seed(711)
+physeq.prune.rarefy = rarefy_even_depth(physeq.prune, sample.size = 4941, replace = FALSE, trimOTUs = TRUE)
+physeq.prune.rarefy
+
+physeq.prune.rarefy.fun <- subset_taxa(physeq.prune.rarefy,Kingdom == "Fungi")
+physeq.prune.rarefy.fun
+
+fun.con <- subset_samples(physeq.prune.rarefy.fun, Treatment == "Control")
+fun.june <- subset_samples(physeq.prune.rarefy.fun, Date == "June_2017")
+fun.nov <- subset_samples(physeq.prune.rarefy.fun, Date == "November_2017")
+fun.june.control <- subset_samples(fun.june, Treatment == "Control")
+fun.nov.control <- subset_samples(fun.nov, Treatment == "Control")
+fun.june.erle <- subset_samples(fun.june, Grass == "ERLE")
+fun.june.boer <- subset_samples(fun.june, Grass == "BOER")
+fun.nov.erle <- subset_samples(fun.nov, Grass == "ERLE")
+fun.nov.boer <- subset_samples(fun.nov, Grass == "BOER")
+```
+
+
+####group classes with less than 1% representation into one category - Erle June
+
+##Make taxonomy table into a matrix
+```{r}
+tax.fun.erle.j <- as(tax_table(fun.june.erle),"matrix")
+head(tax.fun.erle.j)
+```
+
+##Relabel NA as Unknown
+
+```{r}
+tax.fun.erle.j[is.na(tax.fun.erle.j)] <- "Unknown"
+head(tax.fun.erle.j)
+```
+
+###Convert tax table back to phyloseq object and generate phyloseq object with new tax table
+```{r}
+TAX.fun.erle.j <- tax_table(tax.fun.erle.j)
+```
+
+```{r}
+fun.erle.j2 <- phyloseq(sample_data(fun.june.erle),otu_table(fun.june.erle),TAX.fun.erle.j)
+fun.erle.j2
+```
+
+```{r}
+fun.june.erle0 = transform_sample_counts(fun.erle.j2, 
+                                                      function(x) x / sum(x))
+```
+
+```{r}
+glom.fun.erle2j <- tax_glom(fun.june.erle0,taxrank = 'Class')
+data_glom.fun.erle2j <- psmelt(glom.fun.erle2j)
+data_glom.fun.erle2j$Class <- as.character(data_glom.fun.erle2j$Class)
+```
+
+```{r}
+unique((data_glom.fun.erle2j$Class))
+```
+
+Top 6 classes
+```{r}
+data_glom.fun.june.erle2.top6 <- subset(data_glom.fun.erle2j, Class == "Dothideomycetes"  | Class ==  "Agaricomycetes"  | Class ==   "Eurotiomycetes"   | Class ==  "Sordariomycetes" | Class ==  
+   "Pezizomycetes"  | Class ==   "Lecanoromycetes"  )
+```
+
+```{r}
+unique((data_glom.fun.june.erle2.top6$Class))
+```
+
+```{r}
+fun.june.erle <- ggplot(data_glom.fun.june.erle2.top6,aes(Treatment,Abundance,color=Class)) + geom_boxplot() +
+  scale_color_manual(values = c("indianred1", "lightsalmon","grey26","lightgreen", "lightblue1", "royalblue3")) + labs(y= "Relative Abundance") + theme_bw(base_size = 20) + theme(axis.text.x = element_text(angle = 90))
+```
+
+```{r}
+fun.june.erle
+```
+
+
+####group classes with less than 1% representation into one category - Erle November
+
+##Make taxonomy table into a matrix
+```{r}
+tax.fun.erle.n <- as(tax_table(fun.nov.erle),"matrix")
+head(tax.fun.erle.n)
+```
+
+##Relabel NA as Unknown
+
+```{r}
+tax.fun.erle.n[is.na(tax.fun.erle.n)] <- "Unknown"
+head(tax.fun.erle.n)
+```
+
+###Convert tax table back to phyloseq object and generate phyloseq object with new tax table
+```{r}
+TAX.fun.erle.n <- tax_table(tax.fun.erle.n)
+```
+
+```{r}
+fun.erle.n2 <- phyloseq(sample_data(fun.nov.erle),otu_table(fun.nov.erle),TAX.fun.erle.n)
+fun.erle.n2
+```
+
+```{r}
+fun.june.erle0n = transform_sample_counts(fun.erle.n2, 
+                                                      function(x) x / sum(x))
+```
+
+```{r}
+glom.fun.erle2n <- tax_glom(fun.june.erle0n,taxrank = 'Class')
+data_glom.fun.erle2n <- psmelt(glom.fun.erle2n)
+data_glom.fun.erle2n$Class <- as.character(data_glom.fun.erle2n$Class)
+```
+
+```{r}
+unique((data_glom.fun.erle2n$Class))
+```
+
+Top 6 classes
+```{r}
+data_glom.fun.nov.erle2.top6 <- subset(data_glom.fun.erle2n, Class == "Dothideomycetes"  | Class ==  "Eurotiomycetes"  | Class ==   "Sordariomycetes"   | Class ==  "Pezizomycetes" | Class ==  
+   "Agaricomycetes"  | Class ==   "Tremellomycetes"  )
+```
+
+```{r}
+unique((data_glom.fun.nov.erle2.top6$Class))
+```
+
+```{r}
+fun.nov.erle <- ggplot(data_glom.fun.nov.erle2.top6,aes(Treatment,Abundance,color=Class)) + geom_boxplot() +
+  scale_color_manual(values = c("indianred1", "lightsalmon","gray26","lightgreen", "lightblue1", "royalblue3")) + labs(y= "Relative Abundance") + theme_bw(base_size = 20) + theme(axis.text.x = element_text(angle = 90))
+```
+
+```{r}
+fun.nov.erle
+```
+
+
+####group classes with less than 1% representation into one category - Boer June
+
+##Make taxonomy table into a matrix
+```{r}
+tax.fun.boer.j <- as(tax_table(fun.june.boer),"matrix")
+head(tax.fun.boer.j)
+```
+
+##Relabel NA as Unknown
+
+```{r}
+tax.fun.boer.j[is.na(tax.fun.boer.j)] <- "Unknown"
+head(tax.fun.boer.j)
+```
+
+###Convert tax table back to phyloseq object and generate phyloseq object with new tax table
+```{r}
+TAX.fun.boer.j <- tax_table(tax.fun.boer.j)
+```
+
+```{r}
+fun.boer.j2 <- phyloseq(sample_data(fun.june.boer),otu_table(fun.june.boer),TAX.fun.boer.j)
+fun.boer.j2
+```
+
+```{r}
+fun.june.boer0 = transform_sample_counts(fun.boer.j2, 
+                                                      function(x) x / sum(x))
+```
+
+```{r}
+glom.fun.boer2j <- tax_glom(fun.june.boer0,taxrank = 'Class')
+data_glom.fun.boer2j <- psmelt(glom.fun.boer2j)
+data_glom.fun.boer2j$Class <- as.character(data_glom.fun.boer2j$Class)
+```
+
+```{r}
+unique((data_glom.fun.boer2j$Class))
+```
+
+Top 6 classes
+```{r}
+data_glom.fun.june.boer2.top6 <- subset(data_glom.fun.boer2j, Class == "Dothideomycetes"  | Class ==  "Agaricomycetes"  | Class ==   "Pezizomycetes"   | Class ==  "Eurotiomycetes" | Class ==  
+   "Sordariomycetes"  | Class ==   "Leotiomycetes"  )
+```
+
+```{r}
+unique((data_glom.fun.june.boer2.top6$Class))
+```
+
+```{r}
+fun.june.boer <- ggplot(data_glom.fun.june.boer2.top6,aes(Treatment,Abundance,color=Class)) + geom_boxplot() +
+  scale_color_manual(values = c("indianred1", "lightsalmon","gray26","lightgreen", "lightblue1", "royalblue3")) + labs(y= "Relative Abundance") + theme_bw(base_size = 20) + theme(axis.text.x = element_text(angle = 90))
+```
+
+```{r}
+fun.june.boer
+```
+
+
+####group classes with less than 1% representation into one category - boer November
+
+##Make taxonomy table into a matrix
+```{r}
+tax.fun.boer.n <- as(tax_table(fun.nov.boer),"matrix")
+head(tax.fun.boer.n)
+```
+
+##Relabel NA as Unknown
+
+```{r}
+tax.fun.boer.n[is.na(tax.fun.boer.n)] <- "Unknown"
+head(tax.fun.boer.n)
+```
+
+###Convert tax table back to phyloseq object and generate phyloseq object with new tax table
+```{r}
+TAX.fun.boer.n <- tax_table(tax.fun.boer.n)
+```
+
+```{r}
+fun.boer.n2 <- phyloseq(sample_data(fun.nov.boer),otu_table(fun.nov.boer),TAX.fun.boer.n)
+fun.boer.n2
+```
+
+```{r}
+fun.june.boer0n = transform_sample_counts(fun.boer.n2, 
+                                                      function(x) x / sum(x))
+```
+
+```{r}
+glom.fun.boer2n <- tax_glom(fun.june.boer0n,taxrank = 'Class')
+data_glom.fun.boer2n <- psmelt(glom.fun.boer2n)
+data_glom.fun.boer2n$Class <- as.character(data_glom.fun.boer2n$Class)
+```
+
+```{r}
+unique((data_glom.fun.boer2n$Class))
+```
+
+Top 6 classes
+```{r}
+data_glom.fun.nov.boer2.top6 <- subset(data_glom.fun.boer2n, Class == "Dothideomycetes"  | Class ==  "Agaricomycetes"  | Class ==   "Pezizomycetes"   | Class ==  "Sordariomycetes" | Class ==  
+  "Eurotiomycetes"  | Class ==   "Leotiomycetes"  )
+```
+
+```{r}
+unique((data_glom.fun.nov.boer2.top6$Class))
+```
+
+```{r}
+fun.nov.boer <- ggplot(data_glom.fun.nov.boer2.top6,aes(Treatment,Abundance,color=Class)) + geom_boxplot() +
+  scale_color_manual(values = c("indianred1", "lightsalmon","gray26","lightgreen", "lightblue1", "royalblue3")) + labs(y= "Relative Abundance") + theme_bw(base_size = 20) + theme(axis.text.x = element_text(angle = 90))
+```
+
+```{r}
+fun.nov.boer
+```
+
+```{r}
+figure3 <- ggarrange(fun.june.erle, fun.nov.erle, fun.june.boer, fun.nov.boer,
+                    labels = c("A", "B","C","D"),
+                    ncol = 2, nrow = 2)
+```
+
+
+
+```{r}
+figure3
+```
+
+```{r}
+figure3
+ggsave("Figure3.png",width=12,height=8,dpi = 400)
+```
+
+

@@ -1,0 +1,302 @@
+---
+title: "Figure7"
+author: "Andrew Dominguez"
+date: "7/30/2020"
+output: html_document
+---
+
+```{r}
+setwd("~/Manuscript.Figures")
+```
+
+#Bacteria
+
+```{r}
+library(ape)
+library(vegan)
+library(plyr)
+library(dplyr)
+library(tidyr)
+library(scales)
+library(grid)
+library(reshape2)
+library(phyloseq)
+library(magrittr)
+library(ggplot2)
+library(ggpubr)
+library(data.table)
+library(labdsv)
+otu = read.table(file="files/LGasv16SUN3.otu_table.txt", header=T, sep='\t',row.names = 1)
+head(otu)
+dim(otu)
+tax <- read.table(file="files/taxonomy.fix.16S.tsv", sep='\t', header=TRUE,row.names = 1)
+head(tax)
+dim(tax)
+tax <- select(tax,-Confidence)
+tax_filtered = separate(tax, Taxon, c("Kingdom","Phylum","Class","Order", "Family", "Genus","Species"), sep= ";", remove=TRUE)
+head(tax_filtered)
+taxmat <- as(as.matrix(tax_filtered),"matrix")
+TAX = tax_table(taxmat)
+otumat <- as(as.matrix(otu), "matrix")
+mode(otumat) <- "numeric"
+OTU = otu_table(otumat, taxa_are_rows = TRUE)
+otumat
+meta0 = read.table("files/Andrew16S_mappingfile.txt",
+                  header=TRUE,row.names=1,
+                  sep="\t",stringsAsFactors=FALSE)
+head(meta0)
+meta <- meta0[which(meta0$Owner %in% c("Andrew")),]
+head(meta)
+dim(meta)
+sampleData <- sample_data(meta)
+physeq = phyloseq(OTU,TAX,sampleData)
+physeq
+physeq.prune = prune_taxa(taxa_sums(physeq) > 0, physeq)
+physeq
+readcount = data.table(as(sample_data(physeq.prune), "data.frame"),
+                 TotalReads = sample_sums(physeq.prune), 
+                 keep.rownames = TRUE)
+setnames(readcount, "rn", "SampleID")
+readcount = readcount[order(readcount$TotalReads), c("SampleID", "TotalReads")]
+head(readcount)
+set.seed(711)
+physeq.prune.rarefy = rarefy_even_depth(physeq.prune, sample.size = 37702, replace = FALSE, trimOTUs = TRUE)
+physeq.prune.rarefy
+bacteria <- subset_taxa(physeq.prune.rarefy, Kingdom == "Bacteria")
+bacteria.con <- subset_samples(bacteria, Treatment == "Control")
+bacteria.june <- subset_samples(bacteria, Date == "June_2017")
+bacteria.nov <- subset_samples(bacteria, Date == "November_2017")
+bacteria.june.control <- subset_samples(bacteria.june, Treatment == "Control")
+bacteria.nov.control <- subset_samples(bacteria.nov, Treatment == "Control")
+bacteria.june.erle <- subset_samples(bacteria.june, Grass == "ERLE")
+bacteria.nov.erle <- subset_samples(bacteria.nov, Grass == "ERLE")
+bacteria.june.boer <- subset_samples(bacteria.june, Grass == "BOER")
+bacteria.nov.boer <- subset_samples(bacteria.nov, Grass == "BOER")
+```
+
+
+
+#NMDS treatment effects - June
+
+```{r}
+bac.treat.ord <- ordinate(bacteria.june, "NMDS", "bray")
+```
+
+```{r}
+bac.ord.june <- plot_ordination(bacteria.june, bac.treat.ord, type = "samples", 
+                color = "Treatment",shape = "Grass") + theme_bw(base_size = 20) + geom_point(size=3)
+```
+
+```{r}
+bac.ord.june
+```
+
+
+```{r}
+ps.dist.bacteria.j = phyloseq::distance(bacteria.june, "bray")
+mod.14 <- adonis(ps.dist.bacteria.j ~ Treatment*Grass, as(sample_data(bacteria.june),"data.frame"))
+mod.14
+```
+
+#NMDS treatment effects - November
+
+```{r}
+bac.treat.ord.n <- ordinate(bacteria.nov, "NMDS", "bray")
+```
+
+
+```{r}
+bac.ord.nov <- plot_ordination(bacteria.nov, bac.treat.ord.n, type = "samples", 
+                color = "Treatment",shape = "Grass") + theme_bw(base_size = 20) + geom_point(size=3)
+```
+
+```{r}
+bac.ord.nov
+```
+
+
+```{r}
+ps.dist.bacteria.n = phyloseq::distance(bacteria.nov, "bray")
+mod.15 <- adonis(ps.dist.bacteria.n ~ Treatment*Grass, as(sample_data(bacteria.nov),"data.frame"))
+mod.15
+```
+
+
+# Fungi
+
+```{r}
+otu = read.table(file="files/FungiAD.otu_table.txt", header=T, sep='\t',row.names = 1)
+head(otu)
+dim(otu)
+
+tax <- read.table(file="files/FungiAD.ASVs.taxonomy.fix.txt", sep='\t', header=TRUE,row.names = 1)
+head(tax)
+
+dim(tax)
+
+taxmat <- as(tax,"matrix")
+head(taxmat)
+
+TAX = tax_table(taxmat)
+
+otumat <- as(as.matrix(otu), "matrix")
+mode(otumat) <- "numeric"
+OTU = otu_table(otumat, taxa_are_rows = TRUE)
+
+otumat
+
+meta0 = read.table("files/Andrew_ITS.mapping_file.txt",
+                  header=TRUE,row.names=1,
+                  sep="\t",stringsAsFactors=FALSE)
+meta0
+
+sampleData <- sample_data(meta0)
+
+
+physeq = phyloseq(OTU,TAX,sampleData)
+
+
+
+physeq
+
+
+physeq.prune = prune_taxa(taxa_sums(physeq) > 0, physeq)
+physeq
+
+readcount = data.table(as(sample_data(physeq.prune), "data.frame"),
+                 TotalReads = sample_sums(physeq.prune), 
+                 keep.rownames = TRUE)
+setnames(readcount, "rn", "SampleID")
+
+
+readcount = readcount[order(readcount$TotalReads), c("SampleID", "TotalReads")]
+head(readcount)
+
+set.seed(711)
+physeq.prune.rarefy = rarefy_even_depth(physeq.prune, sample.size = 4941, replace = FALSE, trimOTUs = TRUE)
+physeq.prune.rarefy
+
+physeq.prune.rarefy.fun <- subset_taxa(physeq.prune.rarefy,Kingdom == "Fungi")
+physeq.prune.rarefy.fun
+
+fun.con <- subset_samples(physeq.prune.rarefy.fun, Treatment == "Control")
+fun.june <- subset_samples(physeq.prune.rarefy.fun, Date == "June_2017")
+fun.nov <- subset_samples(physeq.prune.rarefy.fun, Date == "November_2017")
+fun.june.control <- subset_samples(fun.june, Treatment == "Control")
+fun.nov.control <- subset_samples(fun.nov, Treatment == "Control")
+fun.june.erle <- subset_samples(fun.june, Grass == "ERLE")
+fun.june.boer <- subset_samples(fun.june, Grass == "BOER")
+fun.nov.erle <- subset_samples(fun.nov, Grass == "ERLE")
+fun.nov.boer <- subset_samples(fun.nov, Grass == "BOER")
+```
+
+
+```{r}
+otu.fun.treat.j <- as(otu_table(fun.june),"matrix")
+```
+
+```{r}
+otu.fun.treat.j <- t(otu.fun.treat.j)
+```
+
+```{r}
+fun.treat.ord2 <- metaMDS(otu.fun.treat.j,k=5)
+```
+
+```{r}
+fun.treat.df.j <- as(sample_data(fun.june),"matrix")
+```
+
+```{r}
+fun.treat.df.j <- data.frame(fun.treat.df.j)
+fun.treat.df.j
+```
+
+```{r}
+MDS1 = fun.treat.ord2$points[,1]
+MDS2 = fun.treat.ord2$points[,2]
+NMDS.fun.treat.j = data.frame(MDS1 = MDS1, MDS2 = MDS2, Grass = fun.treat.df.j$Grass, Treatment = fun.treat.df.j$Treatment)
+```
+
+
+```{r}
+fun.ord.june <- ggplot(NMDS.fun.treat.j, aes(x=MDS1,y=MDS2,col=Treatment,pch=Grass)) + geom_point(size=3) + theme_bw(base_size = 20)
+```
+
+```{r}
+fun.ord.june
+```
+
+```{r}
+betadiv <- betadiver(otu.fun.treat.j,"z")
+```
+
+```{r}
+adonis(betadiv ~ Treatment * Grass, data = fun.treat.df.j, permutations = 1000)
+```
+
+```{r}
+otu.fun.treat.n <- as(otu_table(fun.nov),"matrix")
+```
+
+```{r}
+otu.fun.treat.n <- t(otu.fun.treat.n)
+```
+
+```{r}
+fun.treat.ord2.n <- metaMDS(otu.fun.treat.n,k=3)
+```
+
+```{r}
+fun.treat.df.n <- as(sample_data(fun.nov),"matrix")
+```
+
+```{r}
+fun.treat.df.n <- data.frame(fun.treat.df.n)
+fun.treat.df.n
+```
+
+```{r}
+MDS1 = fun.treat.ord2.n$points[,1]
+MDS2 = fun.treat.ord2.n$points[,2]
+NMDS.fun.treat.n = data.frame(MDS1 = MDS1, MDS2 = MDS2, Grass = fun.treat.df.n$Grass, Treatment = fun.treat.df.n$Treatment)
+```
+
+```{r}
+fun.ord.nov <- ggplot(NMDS.fun.treat.n, aes(x=MDS1,y=MDS2,col=Treatment,pch=Grass)) + geom_point(size=3) + theme_bw(base_size = 20)
+```
+
+```{r}
+fun.ord.nov
+```
+
+```{r}
+betad <- betadiver(otu.fun.treat.n,"z")
+```
+
+```{r}
+adonis(betad ~ Treatment * Grass, data = fun.treat.df.n, permutations = 1000)
+```
+
+
+
+#Figure5
+
+```{r}
+figure5 <- ggarrange(bac.ord.june, bac.ord.nov, fun.ord.june, fun.ord.nov,
+                    labels = c("A", "B","C","D"),
+                    ncol = 2, nrow = 2)
+```
+
+
+
+```{r}
+figure5
+```
+
+##Save figure 1
+
+```{r}
+figure5
+ggsave("Figure5.png",width=12,height=7,dpi = 400)
+```

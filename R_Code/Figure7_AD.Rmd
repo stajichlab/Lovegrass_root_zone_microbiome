@@ -1,0 +1,2091 @@
+---
+title: "Figure 6"
+author: "Andrew Dominguez"
+date: "7/23/2020"
+output: html_document
+---
+
+```{r}
+setwd("~/Manuscript.Figures")
+```
+
+```{r}
+library(ape)
+library(vegan)
+library(plyr)
+library(dplyr)
+library(tidyr)
+library(scales)
+library(grid)
+library(reshape2)
+library(phyloseq)
+library(magrittr)
+library(ggplot2)
+library(ggpubr)
+library(data.table)
+library(labdsv)
+otu = read.table(file="files/LGasv16SUN3.otu_table.txt", header=T, sep='\t',row.names = 1)
+head(otu)
+dim(otu)
+tax <- read.table(file="files/taxonomy.fix.16S.tsv", sep='\t', header=TRUE,row.names = 1)
+head(tax)
+dim(tax)
+tax <- select(tax,-Confidence)
+tax_filtered = separate(tax, Taxon, c("Kingdom","Phylum","Class","Order", "Family", "Genus","Species"), sep= ";", remove=TRUE)
+head(tax_filtered)
+taxmat <- as(as.matrix(tax_filtered),"matrix")
+TAX = tax_table(taxmat)
+otumat <- as(as.matrix(otu), "matrix")
+mode(otumat) <- "numeric"
+OTU = otu_table(otumat, taxa_are_rows = TRUE)
+otumat
+meta0 = read.table("files/Andrew16S_mappingfile.txt",
+                  header=TRUE,row.names=1,
+                  sep="\t",stringsAsFactors=FALSE)
+head(meta0)
+meta <- meta0[which(meta0$Owner %in% c("Andrew")),]
+head(meta)
+dim(meta)
+sampleData <- sample_data(meta)
+physeq = phyloseq(OTU,TAX,sampleData)
+physeq
+physeq.prune = prune_taxa(taxa_sums(physeq) > 0, physeq)
+physeq
+readcount = data.table(as(sample_data(physeq.prune), "data.frame"),
+                 TotalReads = sample_sums(physeq.prune), 
+                 keep.rownames = TRUE)
+setnames(readcount, "rn", "SampleID")
+readcount = readcount[order(readcount$TotalReads), c("SampleID", "TotalReads")]
+head(readcount)
+set.seed(711)
+physeq.prune.rarefy = rarefy_even_depth(physeq.prune, sample.size = 37702, replace = FALSE, trimOTUs = TRUE)
+physeq.prune.rarefy
+bacteria <- subset_taxa(physeq.prune.rarefy, Kingdom == "Bacteria")
+bacteria.con <- subset_samples(bacteria, Treatment == "Control")
+bacteria.june <- subset_samples(bacteria, Date == "June_2017")
+bacteria.nov <- subset_samples(bacteria, Date == "November_2017")
+bacteria.june.control <- subset_samples(bacteria.june, Treatment == "Control")
+bacteria.nov.control <- subset_samples(bacteria.nov, Treatment == "Control")
+bacteria.june.erle <- subset_samples(bacteria.june, Grass == "ERLE")
+bacteria.nov.erle <- subset_samples(bacteria.nov, Grass == "ERLE")
+bacteria.june.boer <- subset_samples(bacteria.june, Grass == "BOER")
+bacteria.nov.boer <- subset_samples(bacteria.nov, Grass == "BOER")
+```
+
+
+
+##Subset sample data to look at ERLE bacterial indicator species from June 
+
+```{r}
+ll.june <- as(sample_data(bacteria.june.erle),"matrix")
+ll.june <- data.frame(ll.june)
+ll.june
+```
+
+
+###convert phyloseq otu table to matrix
+
+```{r}
+ll.june.OTU <- as(otu_table(bacteria.june.erle),"matrix")
+head(ll.june.OTU)
+```
+
+
+###Transpose OTU table to show OTU's as columns
+
+```{r}
+ll.june.OTU <- t(ll.june.OTU)
+dim(ll.june.OTU)
+```
+
+###Remove columns with 0's in OTU table
+
+```{r}
+ll.june.OTU2 <- ll.june.OTU[, colSums(ll.june.OTU != 0) > 0]
+dim(ll.june.OTU2)
+```
+
+##Create table for grouping by treatment 
+
+```{r}
+ll.june.treatment <- subset(ll.june, select = "Treatment")
+head(ll.june.treatment)
+```
+
+####Make Treatments numeric to make grouping compatable with indval command
+
+```{r}
+as.numeric(ll.june.treatment$Treatment)
+```
+
+
+```{r}
+erle.ind.june <- indval(ll.june.OTU2,ll.june.treatment$Treatment)
+```
+
+```{r}
+head(erle.ind.june)
+```
+
+###Create table with indicator species with p value of less than 0.05
+
+```{r}
+grj <- erle.ind.june$maxcls[erle.ind.june$pval <= 0.05]
+ivj <- erle.ind.june$indcls[erle.ind.june$pval <= 0.05]
+pvj <- erle.ind.june$pval[erle.ind.june$pval <= 0.05]
+```
+
+```{r}
+erle.ind.table.j <- data.frame(Treatment=grj,indval=ivj,pvalue=pvj)
+erle.ind.table.j <- erle.ind.table.j[order(erle.ind.table.j$Treatment, -erle.ind.table.j$indval),]
+```
+
+
+
+###Change Treatment from numbers to names
+
+```{r}
+erle.ind.table.j$Treatment <- gsub("1","Control", erle.ind.table.j$Treatment)
+erle.ind.table.j$Treatment <- gsub("2","Irrigation", erle.ind.table.j$Treatment)
+erle.ind.table.j$Treatment <- gsub("3","Rainout", erle.ind.table.j$Treatment)
+```
+
+###Remove indicator species with an indicator value less than 0.75
+
+```{r}
+erle.ind.table.j2 <- subset(erle.ind.table.j,indval >= 0.75)
+```
+
+##Transpose indicator species OTU table to format for phyloseq object
+```{r}
+ll.june.OTU3 <- t(ll.june.OTU2)
+```
+
+```{r}
+head(ll.june.OTU3)
+```
+
+
+###Add otu table to indicator species table
+
+```{r}
+indic.otu.erle.j = ll.june.OTU3[row.names(ll.june.OTU3) %in% row.names(erle.ind.table.j2),]
+indic.otumat.erle.j <- as(as.matrix(indic.otu.erle.j), "matrix")
+erle.indic.OTU.j = otu_table(indic.otumat.erle.j, taxa_are_rows = TRUE)
+```
+
+###New phyloseq object
+
+```{r}
+physeq.erle.june <- phyloseq(erle.indic.OTU.j,TAX,sampleData)
+physeq.erle.june
+```
+
+
+```{r}
+tax.erle.j <- as(tax_table(physeq.erle.june),"matrix")
+```
+
+```{r}
+tax.erle.j[is.na(tax.erle.j)] <- "Unknown"
+head(tax.erle.j)
+```
+
+```{r}
+tax.erle.j <- tax_table(tax.erle.j)
+```
+
+```{r}
+physeq.erle.june2 <- phyloseq(otu_table(physeq.erle.june),tax.erle.j,sample_data(physeq.erle.june))
+```
+
+
+###Indicator species analysis using labdsv package - BOER bacterial communities June 2017
+
+```{r}
+bg.june <- as(sample_data(bacteria.june.boer),"matrix")
+bg.june <- data.frame(bg.june)
+bg.june
+```
+
+###Convert phyloseq OTU table to matrix
+
+```{r}
+bg.june.OTU <- as(otu_table(bacteria.june.boer),"matrix")
+head(bg.june.OTU)
+```
+
+###Transpose OTU table to show OTU's as columns
+
+```{r}
+bg.june.OTU <- t(bg.june.OTU)
+```
+
+###Remove columns with 0's in OTU table
+
+```{r}
+bg.june.OTU2 <- bg.june.OTU[, colSums(bg.june.OTU != 0) > 0]
+```
+
+##Create table for grouping by treatment 
+
+```{r}
+bg.june.treatment <- subset(bg.june, select = "Treatment")
+head(bg.june.treatment)
+```
+
+####Make Treatments numeric to make grouping compatable with indval command
+
+```{r}
+as.numeric(bg.june.treatment$Treatment)
+```
+
+
+```{r}
+boer.ind.june <- indval(bg.june.OTU2,bg.june.treatment$Treatment)
+```
+
+```{r}
+head(boer.ind.june)
+```
+
+###Create table with indicator species with p value of less than 0.05
+
+```{r}
+gr.bgj <- boer.ind.june$maxcls[boer.ind.june$pval <= 0.05]
+iv.bgj <- boer.ind.june$indcls[boer.ind.june$pval <= 0.05]
+pv.bgj <- boer.ind.june$pval[boer.ind.june$pval <= 0.05]
+```
+
+```{r}
+boer.ind.table.j <- data.frame(Treatment=gr.bgj,indval=iv.bgj,pvalue=pv.bgj)
+boer.ind.table.j <- boer.ind.table.j[order(boer.ind.table.j$Treatment, -boer.ind.table.j$indval),]
+```
+
+
+###Change Treatment from numbers to names
+
+```{r}
+boer.ind.table.j$Treatment <- gsub("1","Control", boer.ind.table.j$Treatment)
+boer.ind.table.j$Treatment <- gsub("2","Irrigation", boer.ind.table.j$Treatment)
+boer.ind.table.j$Treatment <- gsub("3","Rainout", boer.ind.table.j$Treatment)
+```
+
+###Remove indicator species with an indicator value less than 0.75
+
+```{r}
+boer.ind.table.j2 <- subset(boer.ind.table.j,indval >= 0.75)
+```
+
+##Transpose indicator species OTU table to format for phyloseq object
+```{r}
+bg.june.OTU3 <- t(bg.june.OTU2)
+```
+
+```{r}
+head(bg.june.OTU3)
+```
+
+
+###Add otu table to indicator species table
+
+```{r}
+indic.otu.boer.j = bg.june.OTU3[row.names(bg.june.OTU3) %in% row.names(boer.ind.table.j2),]
+indic.otumat.boer.j <- as(as.matrix(indic.otu.boer.j), "matrix")
+boer.indic.OTU.j = otu_table(indic.otumat.boer.j, taxa_are_rows = TRUE)
+```
+
+###New phyloseq object
+
+```{r}
+physeq.boer.june <- phyloseq(boer.indic.OTU.j,TAX,sampleData)
+physeq.boer.june
+```
+
+
+```{r}
+tax.boer.j <- as(tax_table(physeq.boer.june),"matrix")
+```
+
+```{r}
+tax.boer.j[is.na(tax.boer.j)] <- "Unknown"
+head(tax.boer.j)
+```
+
+```{r}
+tax.boer.j <- tax_table(tax.boer.j)
+```
+
+```{r}
+physeq.boer.june2 <- phyloseq(otu_table(physeq.boer.june),tax.boer.j,sample_data(physeq.boer.june))
+```
+
+
+###Indicator species analysis using labdsv package - ERLE bacterial communities November 2017
+
+
+
+##Subset sample data to look at ERLE bacterial communities from November 
+
+```{r}
+ll.nov <- as(sample_data(bacteria.nov.erle),"matrix")
+ll.nov <- data.frame(ll.nov)
+ll.nov
+```
+
+###Make OTU table from phyloseq object into matrix
+
+```{r}
+ll.nov.OTU <- as(otu_table(bacteria.nov.erle),"matrix")
+head(ll.nov.OTU)
+```
+
+
+###Transpose OTU table to show OTU's as columns
+
+```{r}
+ll.nov.OTU <- t(ll.nov.OTU)
+dim(ll.nov.OTU)
+```
+
+
+###Remove columns with 0's in OTU table
+
+```{r}
+ll.nov.OTU2 <- ll.nov.OTU[, colSums(ll.nov.OTU != 0) > 0]
+dim(ll.nov.OTU2)
+```
+
+##Create table for grouping by treatment 
+
+```{r}
+ll.nov.treatment <- subset(ll.nov, select = "Treatment")
+head(ll.nov.treatment)
+```
+
+####Make Treatments numeric to make grouping compatable with indval command
+
+```{r}
+as.numeric(ll.nov.treatment$Treatment)
+```
+
+
+```{r}
+erle.ind <- indval(ll.nov.OTU2,ll.nov.treatment$Treatment)
+```
+
+
+###Create table with indicator species with p value of less than 0.05
+
+```{r}
+gr <- erle.ind$maxcls[erle.ind$pval <= 0.05]
+iv <- erle.ind$indcls[erle.ind$pval <= 0.05]
+pv <- erle.ind$pval[erle.ind$pval <= 0.05]
+```
+
+```{r}
+erle.ind.table <- data.frame(Treatment=gr,indval=iv,pvalue=pv)
+erle.ind.table <- erle.ind.table[order(erle.ind.table$Treatment, -erle.ind.table$indval),]
+```
+
+
+
+###Change Treatment from numbers to names
+
+```{r}
+erle.ind.table$Treatment <- gsub("1","Control", erle.ind.table$Treatment)
+erle.ind.table$Treatment <- gsub("2","Irrigation", erle.ind.table$Treatment)
+erle.ind.table$Treatment <- gsub("3","Rainout", erle.ind.table$Treatment)
+```
+
+###Remove indicator species with an indicator value less than 0.75
+
+```{r}
+erle.ind.table2 <- subset(erle.ind.table,indval >= 0.75)
+```
+
+##Transpose indicator species OTU table to format for phyloseq object
+```{r}
+ll.nov.OTU3 <- t(ll.nov.OTU2)
+```
+
+```{r}
+head(ll.nov.OTU3)
+```
+
+
+###Add otu table to indicator species table
+
+```{r}
+indic.otu.erle = ll.nov.OTU3[row.names(ll.nov.OTU3) %in% row.names(erle.ind.table2),]
+indic.otumat.erle <- as(as.matrix(indic.otu.erle), "matrix")
+erle.indic.OTU = otu_table(indic.otumat.erle, taxa_are_rows = TRUE)
+```
+
+###New phyloseq object
+
+```{r}
+physeq.erle.nov <- phyloseq(erle.indic.OTU,TAX,sampleData)
+physeq.erle.nov
+```
+
+
+```{r}
+tax.erle <- as(tax_table(physeq.erle.nov),"matrix")
+```
+
+```{r}
+tax.erle[is.na(tax.erle)] <- "Unknown"
+head(tax.erle)
+```
+
+```{r}
+tax.erle <- tax_table(tax.erle)
+```
+
+```{r}
+physeq.erle.nov2 <- phyloseq(otu_table(physeq.erle.nov),tax.erle,sample_data(physeq.erle.nov))
+```
+
+
+###Indicator species analysis using labdsv package - BOER bacterial communities November 2017
+
+```{r}
+bg.nov <- as(sample_data(bacteria.nov.boer),"matrix")
+bg.nov <- data.frame(bg.nov)
+bg.nov
+```
+
+###Change OTU table to matrix
+
+
+```{r}
+bg.nov.OTU <- as(otu_table(bacteria.nov.boer),"matrix")
+head(bg.nov.OTU)
+```
+
+###Transpose OTU table to show OTU's as columns
+
+```{r}
+bg.nov.OTU <- t(bg.nov.OTU)
+dim(bg.nov.OTU)
+```
+
+###Remove columns with 0's in OTU table
+
+```{r}
+bg.nov.OTU2 <- bg.nov.OTU[, colSums(bg.nov.OTU != 0) > 0]
+dim(bg.nov.OTU)
+```
+
+##Create table for grouping by treatment 
+
+```{r}
+bg.nov.treatment <- subset(bg.nov, select = "Treatment")
+head(bg.nov.treatment)
+```
+
+####Make Treatments numeric to make grouping compatable with indval command
+
+```{r}
+as.numeric(bg.nov.treatment$Treatment)
+```
+
+
+```{r}
+bac.ind <- indval(bg.nov.OTU2,bg.nov.treatment$Treatment)
+```
+
+
+###Create table with indicator species with p value of less than 0.05
+
+```{r}
+gr.bg <- bac.ind$maxcls[bac.ind$pval <= 0.05]
+iv.bg <- bac.ind$indcls[bac.ind$pval <= 0.05]
+pv.bg <- bac.ind$pval[bac.ind$pval <= 0.05]
+```
+
+```{r}
+boer.ind.table <- data.frame(Treatment=gr.bg,indval=iv.bg,pvalue=pv.bg)
+boer.ind.table <- boer.ind.table[order(boer.ind.table$Treatment, -boer.ind.table$indval),]
+```
+
+
+###Change Treatment from numbers to names
+
+```{r}
+boer.ind.table$Treatment <- gsub("1","Control", boer.ind.table$Treatment)
+boer.ind.table$Treatment <- gsub("2","Irrigation", boer.ind.table$Treatment)
+boer.ind.table$Treatment <- gsub("3","Rainout", boer.ind.table$Treatment)
+```
+
+###Remove indicator species with an indicator value less than 0.75
+
+```{r}
+boer.ind.table2 <- subset(boer.ind.table,indval >= 0.75)
+```
+
+##Transpose indicator species OTU table to format for phyloseq object
+```{r}
+bg.nov.OTU3 <- t(bg.nov.OTU2)
+```
+
+```{r}
+head(bg.nov.OTU3)
+```
+
+
+###Add otu table to indicator species table
+
+```{r}
+indic.otu.boer = bg.nov.OTU3[row.names(bg.nov.OTU3) %in% row.names(boer.ind.table2),]
+indic.otumat.boer <- as(as.matrix(indic.otu.boer), "matrix")
+boer.indic.OTU = otu_table(indic.otumat.boer, taxa_are_rows = TRUE)
+```
+
+###New phyloseq object 
+
+```{r}
+physeq.boer.nov <- phyloseq(boer.indic.OTU,TAX,sampleData)
+physeq.boer.nov
+```
+
+
+```{r}
+tax.boer <- as(tax_table(physeq.boer.nov),"matrix")
+```
+
+```{r}
+tax.boer[is.na(tax.boer)] <- "Unknown"
+head(tax.boer)
+```
+
+```{r}
+tax.boer <- tax_table(tax.boer)
+```
+
+```{r}
+physeq.boer.nov2 <- phyloseq(otu_table(physeq.boer.nov),tax.boer,sample_data(physeq.boer.nov))
+```
+
+##Get the average abundance of each indicator for each grass - June BlackGrama
+
+```{r}
+avg.june.con <- merge_samples(physeq.boer.june2, "Treatment")
+sample_data(avg.june.con)$Treatment <- factor(sample_names(avg.june.con))
+avg.june.con2 = transform_sample_counts(avg.june.con, 
+                                                      function(x) x / sum(x))
+```
+
+```{r}
+avg.june.con
+```
+
+```{r}
+avg.june.OTU <- as(otu_table(avg.june.con),"matrix")
+head(avg.june.OTU)
+```
+
+```{r}
+avg.june.TAX <- as(tax_table(avg.june.con),"matrix")
+head(avg.june.TAX)
+```
+
+```{r}
+avg.june.Sample <- as(sample_data(avg.june.con),"matrix")
+head(avg.june.Sample)
+```
+
+##download sample data
+
+```{r}
+setwd("~/Downloads")
+write.csv(avg.june.Sample,"boer.june.avg.fun.csv")
+```
+
+####Edit treatment in CSV - treatment.grass.season
+
+```{r}
+setwd("~/Downloads")
+avg.june.Sample.edit <- read.csv("boer.june.avg.fun.csv",header = TRUE, row.names = 1,stringsAsFactors = TRUE)
+head(avg.june.Sample.edit)
+```
+
+
+```{r}
+avg.june.Sample.edit <- sample_data(avg.june.Sample.edit)
+```
+
+###Create new phylsoeq object with edited sample data
+
+```{r}
+avg.June.indicators <- phyloseq(tax_table(avg.june.con), otu_table(avg.june.con), avg.june.Sample.edit)
+avg.June.indicators
+```
+
+
+##Get the average abundance of each indicator for each grass - Nov BlackGrama
+
+```{r}
+avg.nov.con <- merge_samples(physeq.boer.nov2, "Treatment")
+sample_data(avg.nov.con)$Treatment <- factor(sample_names(avg.nov.con))
+```
+
+```{r}
+avg.nov.con
+```
+
+```{r}
+avg.nov.OTU <- as(otu_table(avg.nov.con),"matrix")
+head(avg.nov.OTU)
+```
+
+```{r}
+avg.nov.TAX <- as(tax_table(avg.nov.con),"matrix")
+head(avg.nov.TAX)
+```
+
+```{r}
+avg.nov.Sample <- as(sample_data(avg.nov.con),"matrix")
+head(avg.nov.Sample)
+```
+
+##Add new column to sample data
+
+```{r}
+setwd("~/Downloads")
+write.csv(avg.nov.Sample,"boer.nov.avg.bac.csv")
+```
+
+####Edit CSV with new column - Grass.season
+
+```{r}
+setwd("~/Downloads")
+avg.nov.Sample.edit <- read.csv("boer.nov.avg.bac.csv",header = TRUE, row.names = 1,stringsAsFactors = TRUE)
+head(avg.nov.Sample.edit)
+```
+
+
+```{r}
+avg.nov.Sample.edit <- sample_data(avg.nov.Sample.edit)
+```
+
+###Create new phylsoeq object with edited sample data
+
+```{r}
+avg.nov.indicators <- phyloseq(tax_table(avg.nov.con), otu_table(avg.nov.con), avg.nov.Sample.edit)
+avg.nov.indicators
+```
+
+##Get the average abundance of each indicator for each grass - June Lovegrass
+
+```{r}
+avg.june2.con <- merge_samples(physeq.erle.june2, "Treatment")
+sample_data(avg.june2.con)$Treatment <- factor(sample_names(avg.june2.con))
+avg.june2.con2 = transform_sample_counts(avg.june2.con, 
+                                                      function(x) x / sum(x))
+```
+
+```{r}
+avg.june2.con
+```
+
+```{r}
+avg.june2.OTU <- as(otu_table(avg.june2.con),"matrix")
+head(avg.june2.OTU)
+```
+
+```{r}
+avg.june2.TAX <- as(tax_table(avg.june2.con),"matrix")
+head(avg.june2.TAX)
+```
+
+```{r}
+avg.june2.Sample <- as(sample_data(avg.june2.con),"matrix")
+head(avg.june2.Sample)
+```
+
+##Add new column to sample data
+
+```{r}
+setwd("~/Downloads")
+write.csv(avg.june2.Sample,"erle.june.avg.bac.csv")
+```
+
+####Edit CSV with edited treatment column
+
+```{r}
+setwd("~/Downloads")
+avg.june2.Sample.edit <- read.csv("erle.june.avg.bac.csv",header = TRUE, row.names = 1,stringsAsFactors = TRUE)
+head(avg.june2.Sample.edit)
+```
+
+
+```{r}
+avg.june2.Sample.edit <- sample_data(avg.june2.Sample.edit)
+```
+
+###Create new phylsoeq object with edited sample data
+
+```{r}
+avg.June2.indicators <- phyloseq(tax_table(avg.june2.con), otu_table(avg.june2.con), avg.june2.Sample.edit)
+avg.June2.indicators
+```
+
+
+##Get the average abundance of each indicator for each grass - Nov Lovegrass
+
+```{r}
+avg.nov2.con <- merge_samples(physeq.erle.nov2, "Treatment")
+sample_data(avg.nov2.con)$Treatment <- factor(sample_names(avg.nov2.con))
+```
+
+```{r}
+avg.nov2.con
+```
+
+```{r}
+avg.nov2.OTU <- as(otu_table(avg.nov2.con),"matrix")
+head(avg.nov2.OTU)
+```
+
+```{r}
+avg.nov2.TAX <- as(tax_table(avg.nov2.con),"matrix")
+head(avg.nov2.TAX)
+```
+
+```{r}
+avg.nov2.Sample <- as(sample_data(avg.nov2.con),"matrix")
+head(avg.nov2.Sample)
+```
+
+##Add new column to sample data
+
+```{r}
+setwd("~/Downloads")
+write.csv(avg.nov2.Sample,"erle.nov.avg.bac.csv")
+```
+
+####Edit CSV with new column - Grass.season
+
+```{r}
+setwd("~/Downloads")
+avg.nov2.Sample.edit <- read.csv("erle.nov.avg.bac.csv",header = TRUE, row.names = 1,stringsAsFactors = TRUE)
+head(avg.nov2.Sample.edit)
+```
+
+
+```{r}
+avg.nov2.Sample.edit <- sample_data(avg.nov2.Sample.edit)
+```
+
+###Create new phylsoeq object with edited sample data
+
+```{r}
+avg.nov2.indicators <- phyloseq(tax_table(avg.nov2.con), otu_table(avg.nov2.con), avg.nov2.Sample.edit)
+avg.nov2.indicators
+```
+
+
+
+##Merge two Boer phyloseq objects
+
+
+
+```{r}
+avg.June.indicators
+```
+
+```{r}
+avg.June.indicators.otu <- as(otu_table(avg.June.indicators),"matrix")
+avg.June.indicators.otu
+```
+
+```{r}
+rownames(avg.June.indicators.otu) <- c("Control.BOER.June","Irrigation.BOER.June","Rainout.BOER.June")
+avg.June.indicators.otu
+```
+
+```{r}
+avg.June.indicators.otu.2 <- t(avg.June.indicators.otu)
+```
+
+```{r}
+avg.June.indicators.otu.3 <- otu_table(avg.June.indicators.otu.2,taxa_are_rows = TRUE)
+```
+
+
+
+```{r}
+avg.June.indicators.sample <- as(sample_data(avg.June.indicators),"matrix")
+avg.June.indicators.sample
+```
+
+```{r}
+rownames(avg.June.indicators.sample) <- c("Control.BOER.June","Irrigation.BOER.June","Rainout.BOER.June")
+avg.June.indicators.sample
+```
+
+```{r}
+avg.June.indicators.sample <- data.frame(avg.June.indicators.sample)
+```
+
+
+```{r}
+avg.June.indicators.Sample <- sample_data(avg.June.indicators.sample)
+head(avg.June.indicators.Sample)
+```
+
+
+
+```{r}
+avg.June.indicators2 <- phyloseq(avg.June.indicators.otu.3,avg.June.indicators.Sample,tax_table(avg.June.indicators))
+avg.June.indicators2
+```
+
+
+```{r}
+avg.nov.indicators.otu <- as(otu_table(avg.nov.indicators),"matrix")
+avg.nov.indicators.otu
+```
+
+```{r}
+rownames(avg.nov.indicators.otu) <- c("Control.BOER.Nov","Irrigation.BOER.Nov","Rainout.BOER.Nov")
+avg.nov.indicators.otu
+```
+
+```{r}
+avg.nov.indicators.otu.2 <- t(avg.nov.indicators.otu)
+```
+
+```{r}
+avg.nov.indicators.otu.3 <- otu_table(avg.nov.indicators.otu.2,taxa_are_rows = TRUE)
+```
+
+
+
+```{r}
+avg.nov.indicators.sample <- as(sample_data(avg.nov.indicators),"matrix")
+avg.nov.indicators.sample
+```
+
+```{r}
+rownames(avg.nov.indicators.sample) <- c("Control.BOER.Nov","Irrigation.BOER.Nov","Rainout.BOER.Nov")
+avg.nov.indicators.sample
+```
+
+```{r}
+avg.nov.indicators.sample <- data.frame(avg.nov.indicators.sample)
+```
+
+
+```{r}
+avg.nov.indicators.Sample <- sample_data(avg.nov.indicators.sample)
+head(avg.nov.indicators.Sample)
+```
+
+
+
+```{r}
+avg.nov.indicators2 <- phyloseq(avg.nov.indicators.otu.3,avg.nov.indicators.Sample,tax_table(avg.nov.indicators))
+avg.nov.indicators2
+```
+
+```{r}
+avg.control.indic <- merge_phyloseq(avg.June.indicators2,avg.nov.indicators2)
+avg.control.indic
+```
+
+
+##Merge Lovegrass phyloseq objects
+
+
+```{r}
+avg.June2.indicators
+```
+
+```{r}
+avg.June2.indicators.otu <- as(otu_table(avg.June2.indicators),"matrix")
+avg.June2.indicators.otu
+```
+
+```{r}
+rownames(avg.June2.indicators.otu) <- c("Control.ERLE.June","Irrigation.ERLE.June","Rainout.ERLE.June")
+avg.June2.indicators.otu
+```
+
+```{r}
+avg.June2.indicators.otu.2 <- t(avg.June2.indicators.otu)
+```
+
+```{r}
+avg.June2.indicators.otu.3 <- otu_table(avg.June2.indicators.otu.2,taxa_are_rows = TRUE)
+```
+
+
+
+```{r}
+avg.June2.indicators.sample <- as(sample_data(avg.June2.indicators),"matrix")
+avg.June2.indicators.sample
+```
+
+```{r}
+rownames(avg.June2.indicators.sample) <- c("Control.ERLE.June","Irrigation.ERLE.June","Rainout.ERLE.June")
+avg.June2.indicators.sample
+```
+
+```{r}
+avg.June2.indicators.sample <- data.frame(avg.June2.indicators.sample)
+```
+
+
+```{r}
+avg.June2.indicators.Sample <- sample_data(avg.June2.indicators.sample)
+head(avg.June2.indicators.Sample)
+```
+
+
+
+```{r}
+avg.June2.indicators2 <- phyloseq(avg.June2.indicators.otu.3,avg.June2.indicators.Sample,tax_table(avg.June2.indicators))
+avg.June2.indicators2
+```
+
+
+```{r}
+avg.nov2.indicators.otu <- as(otu_table(avg.nov2.indicators),"matrix")
+avg.nov2.indicators.otu
+```
+
+```{r}
+rownames(avg.nov2.indicators.otu) <- c("Control.ERLE.Nov","Irrigation.ERLE.Nov","Rainout.ERLE.Nov")
+avg.nov2.indicators.otu
+```
+
+```{r}
+avg.nov2.indicators.otu.2 <- t(avg.nov2.indicators.otu)
+```
+
+```{r}
+avg.nov2.indicators.otu.3 <- otu_table(avg.nov2.indicators.otu.2,taxa_are_rows = TRUE)
+```
+
+
+
+```{r}
+avg.nov2.indicators.sample <- as(sample_data(avg.nov2.indicators),"matrix")
+avg.nov2.indicators.sample
+```
+
+```{r}
+rownames(avg.nov2.indicators.sample) <- c("Control.ERLE.Nov","Irrigation.ERLE.Nov","Rainout.ERLE.Nov")
+avg.nov2.indicators.sample
+```
+
+```{r}
+avg.nov2.indicators.sample <- data.frame(avg.nov2.indicators.sample)
+```
+
+
+```{r}
+avg.nov2.indicators.Sample <- sample_data(avg.nov2.indicators.sample)
+head(avg.nov2.indicators.Sample)
+```
+
+
+
+```{r}
+avg.nov2.indicators2 <- phyloseq(avg.nov2.indicators.otu.3,avg.nov2.indicators.Sample,tax_table(avg.nov2.indicators))
+avg.nov2.indicators2
+```
+
+```{r}
+avg.control.indic2 <- merge_phyloseq(avg.June2.indicators2,avg.nov2.indicators2)
+avg.control.indic2
+```
+
+
+#Merge erle and boer phyloseq objects togeter
+
+```{r}
+avg.treat.indic <- merge_phyloseq(avg.control.indic,avg.control.indic2)
+avg.treat.indic
+```
+
+
+Prune
+
+```{r}
+avg.treat.indic.20 <- prune_taxa(names(sort(taxa_sums(avg.treat.indic),TRUE)[1:20]), avg.treat.indic)
+```
+
+```{r}
+treat.bac.indic <- plot_heatmap(avg.treat.indic.20, sample.label="Treatment",low = "lightyellow2", na.value = "white", high = "steelblue4", sample.order = "Treatment", taxa.label = "Phylum") + theme_bw(base_size = 20) + theme(axis.text.x = element_text(angle = 90))
+```
+
+
+```{r}
+treat.bac.indic
+```
+
+
+
+#Fungi
+
+
+```{r}
+otu = read.table(file="files/FungiAD.otu_table.txt", header=T, sep='\t',row.names = 1)
+head(otu)
+dim(otu)
+
+tax <- read.table(file="files/FungiAD.ASVs.taxonomy.fix.txt", sep='\t', header=TRUE,row.names = 1)
+head(tax)
+
+dim(tax)
+
+taxmat <- as(tax,"matrix")
+head(taxmat)
+
+TAX = tax_table(taxmat)
+
+otumat <- as(as.matrix(otu), "matrix")
+mode(otumat) <- "numeric"
+OTU = otu_table(otumat, taxa_are_rows = TRUE)
+
+otumat
+
+meta0 = read.table("files/Andrew_ITS.mapping_file.txt",
+                  header=TRUE,row.names=1,
+                  sep="\t",stringsAsFactors=FALSE)
+meta0
+
+sampleData <- sample_data(meta0)
+
+
+physeq = phyloseq(OTU,TAX,sampleData)
+
+
+
+physeq
+
+
+physeq.prune = prune_taxa(taxa_sums(physeq) > 0, physeq)
+physeq
+
+readcount = data.table(as(sample_data(physeq.prune), "data.frame"),
+                 TotalReads = sample_sums(physeq.prune), 
+                 keep.rownames = TRUE)
+setnames(readcount, "rn", "SampleID")
+
+
+readcount = readcount[order(readcount$TotalReads), c("SampleID", "TotalReads")]
+head(readcount)
+
+set.seed(711)
+physeq.prune.rarefy = rarefy_even_depth(physeq.prune, sample.size = 4941, replace = FALSE, trimOTUs = TRUE)
+physeq.prune.rarefy
+
+physeq.prune.rarefy.fun <- subset_taxa(physeq.prune.rarefy,Kingdom == "Fungi")
+physeq.prune.rarefy.fun
+
+fun.con <- subset_samples(physeq.prune.rarefy.fun, Treatment == "Control")
+fun.june <- subset_samples(physeq.prune.rarefy.fun, Date == "June_2017")
+fun.nov <- subset_samples(physeq.prune.rarefy.fun, Date == "November_2017")
+fun.june.control <- subset_samples(fun.june, Treatment == "Control")
+fun.nov.control <- subset_samples(fun.nov, Treatment == "Control")
+fun.june.erle <- subset_samples(fun.june, Grass == "ERLE")
+fun.june.boer <- subset_samples(fun.june, Grass == "BOER")
+fun.nov.erle <- subset_samples(fun.nov, Grass == "ERLE")
+fun.nov.boer <- subset_samples(fun.nov, Grass == "BOER")
+```
+
+###Change phyloseq otu table to matrix
+
+```{r}
+bg.fun.j.OTU <- as(otu_table(fun.june.boer),"matrix")
+head(bg.fun.j.OTU)
+```
+
+###Transpose OTU table to show OTU's as columns
+
+```{r}
+bg.fun.j.OTU <- t(bg.fun.j.OTU)
+```
+
+###Remove columns with 0's in OTU table
+
+```{r}
+bg.fun.j.OTU2 <- bg.fun.j.OTU[, colSums(bg.fun.j.OTU != 0) > 0]
+```
+
+##Create table for grouping by treatment 
+
+```{r}
+bg.fun.treatment.j <- subset(bg.fun.j, select = "Treatment")
+head(bg.fun.treatment.j)
+```
+
+####Make Treatments numeric to make grouping compatable with indval command
+
+```{r}
+as.numeric(bg.fun.treatment.j$Treatment)
+```
+
+```{r}
+bg.fun.ind.j <- indval(bg.fun.j.OTU2,bg.fun.treatment.j$Treatment)
+```
+
+```{r}
+head(bg.fun.ind.j)
+```
+
+
+
+###Create table with indicator species with p value of less than 0.05
+
+```{r}
+gr.bg.fun.j <- bg.fun.ind.j$maxcls[bg.fun.ind.j$pval <= 0.05]
+iv.bg.fun.j <- bg.fun.ind.j$indcls[bg.fun.ind.j$pval <= 0.05]
+pv.bg.fun.j <- bg.fun.ind.j$pval[bg.fun.ind.j$pval <= 0.05]
+```
+
+```{r}
+bg.fun.ind.table.j <- data.frame(Treatment=gr.bg.fun.j,indval=iv.bg.fun.j,pvalue=pv.bg.fun.j)
+bg.fun.ind.table.j <- bg.fun.ind.table.j[order(bg.fun.ind.table.j$Treatment, -bg.fun.ind.table.j$indval),]
+```
+
+
+###Change Treatment from numbers to names
+
+```{r}
+bg.fun.ind.table.j$Treatment <- gsub("1","Control", bg.fun.ind.table.j$Treatment)
+bg.fun.ind.table.j$Treatment <- gsub("2","Irrigation", bg.fun.ind.table.j$Treatment)
+bg.fun.ind.table.j$Treatment <- gsub("3","Rainout", bg.fun.ind.table.j$Treatment)
+```
+
+###Remove indicator species with an indicator value less than 0.75
+
+```{r}
+bg.fun.ind.table.j2 <- subset(bg.fun.ind.table.j,indval >= 0.75)
+```
+
+##Transpose indicator species OTU table to format for phyloseq object
+```{r}
+bg.fun.j.OTU3 <- t(bg.fun.j.OTU2)
+```
+
+```{r}
+head(bg.fun.j.OTU3)
+```
+
+
+###Add otu table to indicator species table
+
+```{r}
+indic.otu.boer.fun.j = bg.fun.j.OTU3[row.names(bg.fun.j.OTU3) %in% row.names(bg.fun.ind.table.j2),]
+indic.otumat.boer.fun.j <- as(as.matrix(indic.otu.boer.fun.j), "matrix")
+fun.boer.indic.OTU.j = otu_table(indic.otumat.boer.fun.j, taxa_are_rows = TRUE)
+```
+
+###New phyloseq object
+
+```{r}
+physeq.boer.june.fun <- phyloseq(fun.boer.indic.OTU.j,TAX,sampleData)
+physeq.boer.june.fun
+```
+
+```{r}
+physeq.boer.june.fun <- subset_taxa(physeq.boer.june.fun, Kingdom == "Fungi")
+physeq.boer.june.fun
+```
+
+
+```{r}
+tax.boer.j <- as(tax_table(physeq.boer.june.fun),"matrix")
+```
+
+```{r}
+tax.boer.j[is.na(tax.boer.j)] <- "Unknown"
+head(tax.boer.j)
+```
+
+```{r}
+tax.boer.j <- tax_table(tax.boer.j)
+```
+
+```{r}
+physeq.boer.june.fun2 <- phyloseq(otu_table(physeq.boer.june.fun),tax.boer.j,sample_data(physeq.boer.june.fun))
+```
+
+
+##Subset sample data to look at ERLE fungal communities from June 
+
+```{r}
+ll.fun.j <- as(sample_data(fun.june.erle),"matrix")
+ll.fun.j <- data.frame(ll.fun.j)
+ll.fun.j
+```
+
+###Change phyloseq otu table to matrix
+
+
+```{r}
+ll.fun.OTU.j <- as(otu_table(fun.june.erle),"matrix")
+head(ll.fun.OTU.j)
+```
+
+###Transpose OTU table to show OTU's as columns
+
+```{r}
+ll.fun.OTU.j <- t(ll.fun.OTU.j)
+dim(ll.fun.OTU.j)
+```
+
+###Remove columns with 0's in OTU table
+
+```{r}
+ll.fun.OTU2.j <- ll.fun.OTU.j[, colSums(ll.fun.OTU.j != 0) > 0]
+dim(ll.fun.OTU2.j)
+```
+
+##Create table for grouping by treatment 
+
+```{r}
+ll.fun.treatment.j <- subset(ll.fun.j, select = "Treatment")
+head(ll.fun.treatment.j)
+```
+
+####Make Treatments numeric to make grouping compatable with indval command
+
+```{r}
+as.numeric(ll.fun.treatment.j$Treatment)
+```
+
+```{r}
+fun.ind.ll.j <- indval(ll.fun.OTU2.j,ll.fun.treatment.j$Treatment)
+```
+
+
+###Create table with indicator species with p value of less than 0.05
+
+```{r}
+gr.ll.j <- fun.ind.ll.j$maxcls[fun.ind.ll.j$pval <= 0.05]
+iv.ll.j <- fun.ind.ll.j$indcls[fun.ind.ll.j$pval <= 0.05]
+pv.ll.j <- fun.ind.ll.j$pval[fun.ind.ll.j$pval <= 0.05]
+```
+
+```{r}
+fun.ind.table.ll.j <- data.frame(Treatment=gr.ll.j,indval=iv.ll.j,pvalue=pv.ll.j)
+fun.ind.table.ll.j <- fun.ind.table.ll.j[order(fun.ind.table.ll.j$Treatment, -fun.ind.table.ll.j$indval),]
+```
+
+###Change Treatment from numbers to names
+
+```{r}
+fun.ind.table.ll.j$Treatment <- gsub("1","Control", fun.ind.table.ll.j$Treatment)
+fun.ind.table.ll.j$Treatment <- gsub("2","Irrigation", fun.ind.table.ll.j$Treatment)
+fun.ind.table.ll.j$Treatment <- gsub("3","Rainout", fun.ind.table.ll.j$Treatment)
+```
+
+###Remove indicator species with an indicator value less than 0.75
+
+```{r}
+fun.ind.table.ll.j2 <- subset(fun.ind.table.ll.j,indval >= 0.75)
+```
+
+##Transpose indicator species OTU table to format for phyloseq object
+```{r}
+ll.fun.OTU3.j <- t(ll.fun.OTU2.j)
+```
+
+```{r}
+head(ll.fun.OTU3.j)
+```
+
+
+###Add otu table to indicator species table
+
+```{r}
+indic.otu.erle.fun.j = ll.fun.OTU3.j[row.names(ll.fun.OTU3.j) %in% row.names(fun.ind.table.ll.j2),]
+indic.otumat.erle.fun.j <- as(as.matrix(indic.otu.erle.fun.j), "matrix")
+fun.erle.indic.OTU.j = otu_table(indic.otumat.erle.fun.j, taxa_are_rows = TRUE)
+```
+
+###New phyloseq object with heat map
+
+```{r}
+physeq.erle.june.fun <- phyloseq(fun.erle.indic.OTU.j,TAX,sampleData)
+physeq.erle.june.fun
+```
+
+```{r}
+physeq.erle.june.fun <- subset_taxa(physeq.erle.june.fun, Kingdom == "Fungi")
+physeq.erle.june.fun
+```
+
+
+```{r}
+tax.erle.j <- as(tax_table(physeq.erle.june.fun),"matrix")
+```
+
+```{r}
+tax.erle.j[is.na(tax.erle.j)] <- "Unknown"
+head(tax.erle.j)
+```
+
+```{r}
+tax.erle.j <- tax_table(tax.erle.j)
+```
+
+```{r}
+physeq.erle.june.fun2 <- phyloseq(otu_table(physeq.erle.june.fun),tax.erle.j,sample_data(physeq.erle.june.fun))
+physeq.erle.june.fun2
+```
+
+###Indicator species analysis using labdsv package - BOER fungal communities November 2017
+
+
+##Subset sample data to look at BOER bacterial communities from November 
+
+```{r}
+bg.fun <- as(sample_data(fun.nov.boer),"matrix")
+bg.fun <- data.frame(bg.fun)
+bg.fun
+```
+
+###Change OTU phyloseq object to matrix
+
+```{r}
+OTU.fun <- as(otu_table(fun.nov.boer),"matrix")
+head(OTU.fun)
+```
+
+
+```{r}
+bg.fun.OTU <- t(OTU.fun)
+dim(bg.fun.OTU)
+```
+
+###Remove columns with 0's in OTU table
+
+```{r}
+bg.fun.OTU2 <- bg.fun.OTU[, colSums(bg.fun.OTU != 0) > 0]
+dim(bg.fun.OTU2)
+```
+
+##Create table for grouping by treatment 
+
+```{r}
+bg.fun.treatment <- subset(bg.fun, select = "Treatment")
+head(bg.fun.treatment)
+```
+
+####Make Treatments numeric to make grouping compatable with indval command
+
+```{r}
+as.numeric(bg.fun.treatment$Treatment)
+```
+
+```{r}
+fun.ind <- indval(bg.fun.OTU2,bg.fun.treatment$Treatment)
+```
+
+
+
+###Create table with indicator species with p value of less than 0.05
+
+```{r}
+gr.bg.fun <- fun.ind$maxcls[fun.ind$pval <= 0.05]
+iv.bg.fun <- fun.ind$indcls[fun.ind$pval <= 0.05]
+pv.bg.fun <- fun.ind$pval[fun.ind$pval <= 0.05]
+```
+
+```{r}
+bg.fun.ind.table <- data.frame(Treatment=gr.bg.fun,indval=iv.bg.fun,pvalue=pv.bg.fun)
+bg.fun.ind.table <- bg.fun.ind.table[order(bg.fun.ind.table$Treatment, -bg.fun.ind.table$indval),]
+```
+
+
+
+###Change Treatment from numbers to names
+
+```{r}
+bg.fun.ind.table$Treatment <- gsub("1","Control", bg.fun.ind.table$Treatment)
+bg.fun.ind.table$Treatment <- gsub("2","Irrigation", bg.fun.ind.table$Treatment)
+bg.fun.ind.table$Treatment <- gsub("3","Rainout", bg.fun.ind.table$Treatment)
+```
+
+###Remove indicator species with an indicator value less than 0.75
+
+```{r}
+bg.fun.ind.table2 <- subset(bg.fun.ind.table,indval >= 0.75)
+```
+
+##Transpose indicator species OTU table to format for phyloseq object
+```{r}
+bg.fun.OTU3 <- t(bg.fun.OTU2)
+```
+
+```{r}
+head(bg.fun.OTU3)
+```
+
+
+###Add otu table to indicator species table
+
+```{r}
+indic.otu.boer.fun = bg.fun.OTU3[row.names(bg.fun.OTU3) %in% row.names(bg.fun.ind.table2),]
+indic.otumat.boer.fun <- as(as.matrix(indic.otu.boer.fun), "matrix")
+fun.boer.indic.OTU = otu_table(indic.otumat.boer.fun, taxa_are_rows = TRUE)
+```
+
+###New phyloseq object
+
+```{r}
+physeq.boer.nov.fun <- phyloseq(fun.boer.indic.OTU,TAX,sampleData)
+physeq.boer.nov.fun
+```
+
+```{r}
+physeq.boer.nov.fun <- subset_taxa(physeq.boer.nov.fun, Kingdom == "Fungi")
+physeq.boer.nov.fun
+```
+
+
+
+```{r}
+tax.boer.f <- as(tax_table(physeq.boer.nov.fun),"matrix")
+```
+
+```{r}
+tax.boer.f[is.na(tax.boer.f)] <- "Unknown"
+head(tax.boer.f)
+```
+
+```{r}
+tax.boer.f <- tax_table(tax.boer.f)
+```
+
+```{r}
+physeq.boer.nov.fun2 <- phyloseq(otu_table(physeq.boer.nov.fun),tax.boer.f,sample_data(physeq.boer.nov.fun))
+```
+
+
+
+##Subset sample data to look at ERLE fungal communities from November 
+
+```{r}
+ll.fun <- as(sample_data(fun.nov.erle),"matrix")
+ll.fun <- data.frame(ll.fun)
+ll.fun
+```
+
+###Write out OTU table to subset samples
+
+```{r}
+ll.fun.OTU <- as(otu_table(fun.nov.erle),"matrix")
+head(ll.fun.OTU)
+```
+
+###Transpose OTU table to show OTU's as columns
+
+```{r}
+ll.fun.OTU <- t(ll.fun.OTU)
+dim(ll.fun.OTU)
+```
+
+###Remove columns with 0's in OTU table
+
+```{r}
+ll.fun.OTU2 <- ll.fun.OTU[, colSums(ll.fun.OTU != 0) > 0]
+dim(ll.fun.OTU2)
+```
+
+##Create table for grouping by treatment 
+
+```{r}
+ll.fun.treatment <- subset(ll.fun, select = "Treatment")
+head(ll.fun.treatment)
+```
+
+####Make Treatments numeric to make grouping compatable with indval command
+
+```{r}
+as.numeric(ll.fun.treatment$Treatment)
+```
+
+```{r}
+fun.ind.ll <- indval(ll.fun.OTU2,ll.fun.treatment$Treatment)
+```
+
+
+
+###Create table with indicator species with p value of less than 0.05
+
+```{r}
+gr.ll <- fun.ind.ll$maxcls[fun.ind.ll$pval <= 0.05]
+iv.ll <- fun.ind.ll$indcls[fun.ind.ll$pval <= 0.05]
+pv.ll <- fun.ind.ll$pval[fun.ind.ll$pval <= 0.05]
+```
+
+```{r}
+fun.ind.table.ll <- data.frame(Treatment=gr.ll,indval=iv.ll,pvalue=pv.ll)
+fun.ind.table.ll <- fun.ind.table.ll[order(fun.ind.table.ll$Treatment, -fun.ind.table.ll$indval),]
+```
+
+
+
+###Change Treatment from numbers to names
+
+```{r}
+fun.ind.table.ll$Treatment <- gsub("1","Control", fun.ind.table.ll$Treatment)
+fun.ind.table.ll$Treatment <- gsub("2","Irrigation", fun.ind.table.ll$Treatment)
+fun.ind.table.ll$Treatment <- gsub("3","Rainout", fun.ind.table.ll$Treatment)
+```
+
+###Remove indicator species with an indicator value less than 0.75
+
+```{r}
+fun.ind.table.ll2 <- subset(fun.ind.table.ll,indval >= 0.75)
+```
+
+##Transpose indicator species OTU table to format for phyloseq object
+```{r}
+ll.fun.OTU3 <- t(ll.fun.OTU2)
+```
+
+```{r}
+head(ll.fun.OTU3)
+```
+
+
+###Add otu table to indicator species table
+
+```{r}
+indic.otu.erle.fun = ll.fun.OTU3[row.names(ll.fun.OTU3) %in% row.names(fun.ind.table.ll2),]
+indic.otumat.erle.fun <- as(as.matrix(indic.otu.erle.fun), "matrix")
+fun.erle.indic.OTU = otu_table(indic.otumat.erle.fun, taxa_are_rows = TRUE)
+```
+
+###New phyloseq object
+```{r}
+physeq.erle.nov.fun <- phyloseq(fun.erle.indic.OTU,TAX,sampleData)
+physeq.erle.nov.fun
+```
+
+```{r}
+physeq.erle.nov.fun <- subset_taxa(physeq.erle.nov.fun, Kingdom == "Fungi")
+physeq.erle.nov.fun
+```
+
+
+
+```{r}
+tax.erle.f <- as(tax_table(physeq.erle.nov.fun),"matrix")
+```
+
+```{r}
+tax.erle.f[is.na(tax.erle.f)] <- "Unknown"
+head(tax.erle.f)
+```
+
+```{r}
+tax.erle.f <- tax_table(tax.erle.f)
+```
+
+```{r}
+physeq.erle.nov.fun2 <- phyloseq(otu_table(physeq.erle.nov.fun),tax.erle.f,sample_data(physeq.erle.nov.fun))
+physeq.erle.nov.fun2
+```
+
+
+##Get the average abundance of each indicator for each grass - June BlackGrama
+
+```{r}
+avg.fun.june.con <- merge_samples(physeq.boer.june.fun2, "Treatment")
+sample_data(avg.fun.june.con)$Treatment <- factor(sample_names(avg.fun.june.con))
+```
+
+```{r}
+avg.fun.june.con
+```
+
+```{r}
+avg.fun.june.OTU <- as(otu_table(avg.fun.june.con),"matrix")
+head(avg.fun.june.OTU)
+```
+
+```{r}
+avg.fun.june.TAX <- as(tax_table(avg.fun.june.con),"matrix")
+head(avg.fun.june.TAX)
+```
+
+```{r}
+avg.fun.june.Sample <- as(sample_data(avg.fun.june.con),"matrix")
+head(avg.fun.june.Sample)
+```
+
+##Add new column to sample data
+
+```{r}
+setwd("~/Downloads")
+write.csv(avg.fun.june.Sample,"boer.june.avg.fun.csv")
+```
+
+####Edit CSV with new column - Grass.season
+
+```{r}
+setwd("~/Downloads")
+avg.fun.june.Sample.edit <- read.csv("boer.june.avg.fun.csv",header = TRUE, row.names = 1,stringsAsFactors = TRUE)
+head(avg.fun.june.Sample.edit)
+```
+
+
+```{r}
+avg.fun.june.Sample.edit <- sample_data(avg.fun.june.Sample.edit)
+```
+
+###Create new phylsoeq object with edited sample data
+
+```{r}
+avg.fun.June.indicators <- phyloseq(tax_table(avg.fun.june.con), otu_table(avg.fun.june.con), avg.fun.june.Sample.edit)
+avg.fun.June.indicators
+```
+
+
+##Get the average abundance of each indicator for each grass - Nov BlackGrama
+
+```{r}
+avg.fun.nov.con <- merge_samples(physeq.boer.nov.fun2, "Treatment")
+sample_data(avg.fun.nov.con)$Treatment <- factor(sample_names(avg.fun.nov.con))
+```
+
+```{r}
+avg.fun.nov.con2
+```
+
+```{r}
+avg.fun.nov.OTU <- as(otu_table(avg.fun.nov.con),"matrix")
+head(avg.fun.nov.OTU)
+```
+
+```{r}
+avg.fun.nov.TAX <- as(tax_table(avg.fun.nov.con),"matrix")
+head(avg.fun.nov.TAX)
+```
+
+```{r}
+avg.fun.nov.Sample <- as(sample_data(avg.fun.nov.con),"matrix")
+head(avg.fun.nov.Sample)
+```
+
+##Add new column to sample data
+
+```{r}
+setwd("~/Downloads")
+write.csv(avg.fun.nov.Sample,"boer.nov.avg.fun.csv")
+```
+
+####Edit CSV with new column - Grass.season
+
+```{r}
+setwd("~/Downloads")
+avg.fun.nov.Sample.edit <- read.csv("boer.nov.avg.fun.csv",header = TRUE, row.names = 1,stringsAsFactors = TRUE)
+head(avg.fun.nov.Sample.edit)
+```
+
+
+```{r}
+avg.fun.nov.Sample.edit <- sample_data(avg.fun.nov.Sample.edit)
+```
+
+###Create new phylsoeq object with edited sample data
+
+```{r}
+avg.fun.nov.indicators <- phyloseq(tax_table(avg.fun.nov.con), otu_table(avg.fun.nov.con), avg.fun.nov.Sample.edit)
+avg.fun.nov.indicators
+```
+
+
+
+
+
+
+
+##Get the average abundance of each indicator for each grass - June Lovegrass
+
+```{r}
+avg.fun.june2.con <- merge_samples(physeq.erle.june.fun2, "Treatment")
+sample_data(avg.fun.june2.con)$Treatment <- factor(sample_names(avg.fun.june2.con))
+```
+
+```{r}
+avg.fun.june2.con
+```
+
+```{r}
+avg.fun.june2.OTU <- as(otu_table(avg.fun.june2.con),"matrix")
+head(avg.fun.june2.OTU)
+```
+
+```{r}
+avg.fun.june2.TAX <- as(tax_table(avg.fun.june2.con),"matrix")
+head(avg.fun.june2.TAX)
+```
+
+```{r}
+avg.fun.june2.Sample <- as(sample_data(avg.fun.june2.con),"matrix")
+head(avg.fun.june2.Sample)
+```
+
+##Add new column to sample data
+
+```{r}
+setwd("~/Downloads")
+write.csv(avg.fun.june2.Sample,"erle.june.avg.fun.csv")
+```
+
+####Edit CSV with new column - Grass.season
+
+```{r}
+setwd("~/Downloads")
+avg.fun.june2.Sample.edit <- read.csv("erle.june.avg.fun.csv",header = TRUE, row.names = 1,stringsAsFactors = TRUE)
+head(avg.fun.june2.Sample.edit)
+```
+
+
+```{r}
+avg.fun.june2.Sample.edit <- sample_data(avg.fun.june2.Sample.edit)
+```
+
+###Create new phylsoeq object with edited sample data
+
+```{r}
+avg.fun.June2.indicators <- phyloseq(tax_table(avg.fun.june2.con), otu_table(avg.fun.june2.con), avg.fun.june2.Sample.edit)
+avg.fun.June2.indicators
+```
+
+
+
+
+
+
+
+##Get the average abundance of each indicator for each grass - Nov lovegrass
+
+```{r}
+avg.fun.nov2.con <- merge_samples(physeq.erle.nov.fun2, "Treatment")
+sample_data(avg.fun.nov2.con)$Treatment <- factor(sample_names(avg.fun.nov2.con))
+```
+
+```{r}
+avg.fun.nov2.con
+```
+
+```{r}
+avg.fun.nov2.OTU <- as(otu_table(avg.fun.nov2.con),"matrix")
+head(avg.fun.nov2.OTU)
+```
+
+```{r}
+avg.fun.nov2.TAX <- as(tax_table(avg.fun.nov2.con),"matrix")
+head(avg.fun.nov2.TAX)
+```
+
+```{r}
+avg.fun.nov2.Sample <- as(sample_data(avg.fun.nov2.con),"matrix")
+head(avg.fun.nov2.Sample)
+```
+
+##Add new column to sample data
+
+```{r}
+setwd("~/Downloads")
+write.csv(avg.fun.nov2.Sample,"erle.nov.avg.fun.csv")
+```
+
+####Edit CSV with new column - Grass.season
+
+```{r}
+setwd("~/Downloads")
+avg.fun.nov2.Sample.edit <- read.csv("erle.nov.avg.fun.csv",header = TRUE, row.names = 1,stringsAsFactors = TRUE)
+head(avg.fun.nov2.Sample.edit)
+```
+
+
+```{r}
+avg.fun.nov2.Sample.edit <- sample_data(avg.fun.nov2.Sample.edit)
+```
+
+###Create new phylsoeq object with edited sample data
+
+```{r}
+avg.fun.nov2.indicators <- phyloseq(tax_table(avg.fun.nov2.con), otu_table(avg.fun.nov2.con), avg.fun.nov2.Sample.edit)
+avg.fun.nov2.indicators
+```
+
+
+
+
+
+
+
+
+
+##Merge two Boer phyloseq objects
+
+
+
+```{r}
+avg.fun.June.indicators
+```
+
+```{r}
+avg.fun.June.indicators.otu <- as(otu_table(avg.fun.June.indicators),"matrix")
+avg.fun.June.indicators.otu
+```
+
+```{r}
+rownames(avg.fun.June.indicators.otu) <- c("Control.BOER.June","Irrigation.BOER.June","Rainout.BOER.June")
+avg.fun.June.indicators.otu
+```
+
+```{r}
+avg.fun.June.indicators.otu.2 <- t(avg.fun.June.indicators.otu)
+```
+
+```{r}
+avg.fun.June.indicators.otu.3 <- otu_table(avg.fun.June.indicators.otu.2,taxa_are_rows = TRUE)
+```
+
+
+
+```{r}
+avg.fun.June.indicators.sample <- as(sample_data(avg.fun.June.indicators),"matrix")
+avg.fun.June.indicators.sample
+```
+
+```{r}
+rownames(avg.fun.June.indicators.sample) <- c("Control.BOER.June","Irrigation.BOER.June","Rainout.BOER.June")
+avg.fun.June.indicators.sample
+```
+
+```{r}
+avg.fun.June.indicators.sample <- data.frame(avg.fun.June.indicators.sample)
+```
+
+
+```{r}
+avg.fun.June.indicators.Sample <- sample_data(avg.fun.June.indicators.sample)
+head(avg.fun.June.indicators.Sample)
+```
+
+
+
+```{r}
+avg.fun.June.indicators2 <- phyloseq(avg.fun.June.indicators.otu.3,avg.fun.June.indicators.Sample,tax_table(avg.fun.June.indicators))
+avg.fun.June.indicators2
+```
+
+
+```{r}
+avg.fun.nov.indicators.otu <- as(otu_table(avg.fun.nov.indicators),"matrix")
+avg.fun.nov.indicators.otu
+```
+
+```{r}
+rownames(avg.fun.nov.indicators.otu) <- c("Control.BOER.Nov","Irrigation.BOER.Nov","Rainout.BOER.Nov")
+avg.fun.nov.indicators.otu
+```
+
+```{r}
+avg.fun.nov.indicators.otu.2 <- t(avg.fun.nov.indicators.otu)
+```
+
+```{r}
+avg.fun.nov.indicators.otu.3 <- otu_table(avg.fun.nov.indicators.otu.2,taxa_are_rows = TRUE)
+```
+
+
+
+```{r}
+avg.fun.nov.indicators.sample <- as(sample_data(avg.fun.nov.indicators),"matrix")
+avg.fun.nov.indicators.sample
+```
+
+```{r}
+rownames(avg.fun.nov.indicators.sample) <- c("Control.BOER.Nov","Irrigation.BOER.Nov","Rainout.BOER.Nov")
+avg.fun.nov.indicators.sample
+```
+
+```{r}
+avg.fun.nov.indicators.sample <- data.frame(avg.fun.nov.indicators.sample)
+```
+
+
+```{r}
+avg.fun.nov.indicators.Sample <- sample_data(avg.fun.nov.indicators.sample)
+head(avg.fun.nov.indicators.Sample)
+```
+
+
+
+```{r}
+avg.fun.nov.indicators2 <- phyloseq(avg.fun.nov.indicators.otu.3,avg.fun.nov.indicators.Sample,tax_table(avg.fun.nov.indicators))
+avg.fun.nov.indicators2
+```
+
+```{r}
+avg.fun.control.indic <- merge_phyloseq(avg.fun.June.indicators2,avg.fun.nov.indicators2)
+avg.fun.control.indic
+```
+
+
+##Merge Lovegrass phyloseq objects
+
+
+```{r}
+avg.fun.June2.indicators
+```
+
+```{r}
+avg.fun.June2.indicators.otu <- as(otu_table(avg.fun.June2.indicators),"matrix")
+avg.fun.June2.indicators.otu
+```
+
+```{r}
+rownames(avg.fun.June2.indicators.otu) <- c("Control.ERLE.June","Irrigation.ERLE.June","Rainout.ERLE.June")
+avg.fun.June2.indicators.otu
+```
+
+```{r}
+avg.fun.June2.indicators.otu.2 <- t(avg.fun.June2.indicators.otu)
+```
+
+```{r}
+avg.fun.June2.indicators.otu.3 <- otu_table(avg.fun.June2.indicators.otu.2,taxa_are_rows = TRUE)
+```
+
+
+
+```{r}
+avg.fun.June2.indicators.sample <- as(sample_data(avg.fun.June2.indicators),"matrix")
+avg.fun.June2.indicators.sample
+```
+
+```{r}
+rownames(avg.fun.June2.indicators.sample) <- c("Control.ERLE.June","Irrigation.ERLE.June","Rainout.ERLE.June")
+avg.fun.June2.indicators.sample
+```
+
+```{r}
+avg.fun.June2.indicators.sample <- data.frame(avg.fun.June2.indicators.sample)
+```
+
+
+```{r}
+avg.fun.June2.indicators.Sample <- sample_data(avg.fun.June2.indicators.sample)
+head(avg.fun.June2.indicators.Sample)
+```
+
+
+
+```{r}
+avg.fun.June2.indicators2 <- phyloseq(avg.fun.June2.indicators.otu.3,avg.fun.June2.indicators.Sample,tax_table(avg.fun.June2.indicators))
+avg.fun.June2.indicators2
+```
+
+
+```{r}
+avg.fun.nov2.indicators.otu <- as(otu_table(avg.fun.nov2.indicators),"matrix")
+avg.fun.nov2.indicators.otu
+```
+
+```{r}
+rownames(avg.fun.nov2.indicators.otu) <- c("Control.ERLE.Nov","Irrigation.ERLE.Nov","Rainout.ERLE.Nov")
+avg.fun.nov2.indicators.otu
+```
+
+```{r}
+avg.fun.nov2.indicators.otu.2 <- t(avg.fun.nov2.indicators.otu)
+```
+
+```{r}
+avg.fun.nov2.indicators.otu.3 <- otu_table(avg.fun.nov2.indicators.otu.2,taxa_are_rows = TRUE)
+```
+
+
+
+```{r}
+avg.fun.nov2.indicators.sample <- as(sample_data(avg.fun.nov2.indicators),"matrix")
+avg.fun.nov2.indicators.sample
+```
+
+```{r}
+rownames(avg.fun.nov2.indicators.sample) <- c("Control.ERLE.Nov","Irrigation.ERLE.Nov","Rainout.ERLE.Nov")
+avg.fun.nov2.indicators.sample
+```
+
+```{r}
+avg.fun.nov2.indicators.sample <- data.frame(avg.fun.nov2.indicators.sample)
+```
+
+
+```{r}
+avg.fun.nov2.indicators.Sample <- sample_data(avg.fun.nov2.indicators.sample)
+head(avg.fun.nov2.indicators.Sample)
+```
+
+
+
+```{r}
+avg.fun.nov2.indicators2 <- phyloseq(avg.fun.nov2.indicators.otu.3,avg.fun.nov2.indicators.Sample,tax_table(avg.fun.nov2.indicators))
+avg.fun.nov2.indicators2
+```
+
+```{r}
+avg.fun.control.indic2 <- merge_phyloseq(avg.fun.June2.indicators2,avg.fun.nov2.indicators2)
+avg.fun.control.indic2
+```
+
+
+#Merge erle and boer phyloseq objects togeter
+
+```{r}
+avg.fun.treat.indic <- merge_phyloseq(avg.fun.control.indic,avg.fun.control.indic2)
+avg.fun.treat.indic
+```
+
+```{r}
+treat.fun.indic <- plot_heatmap(avg.fun.treat.indic, sample.label="Treatment",low = "lightyellow2", na.value = "white", high = "steelblue4", sample.order = "Treatment", taxa.label = "Phylum") + theme_bw(base_size = 20) + theme(axis.text.x = element_text(angle = 90))
+```
+
+
+```{r}
+treat.fun.indic
+```
+
+Figure7
+
+```{r}
+figure7 <- ggarrange(treat.bac.indic, treat.fun.indic,
+                    labels = c("A", "B"),
+                    ncol = 1, nrow = 2)
+```
+
+
+
+```{r}
+figure7
+```
+
+##Save figure 1
+
+```{r}
+figure7
+ggsave("Figure7.png",width=11,height=13,dpi = 400)
+```
+
+
+
+

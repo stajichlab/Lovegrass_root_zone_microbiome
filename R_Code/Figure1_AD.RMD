@@ -1,0 +1,451 @@
+---
+title: "Figure1"
+author: "Andrew Dominguez"
+date: "7/23/2020"
+output: html_document
+---
+
+```{r}
+setwd("~/Manuscript.Figures")
+```
+
+```{r}
+install.packages("ape")
+install.packages("vegan")
+install.packages("plyr")
+install.packages("dplyr")
+install.packages("tidyr")
+install.packages("scales")
+install.packages("grid")
+install.packages("reshape2")
+
+source('http://bioconductor.org/biocLite.R')
+biocLite('phyloseq')
+
+install.packages("magrittr")
+install.packages("ggplot2")
+install.packages("ggpubr")
+install.packages("data.table")
+install.packages("labdsv")
+
+
+library(ape)
+library(vegan)
+library(plyr)
+library(dplyr)
+library(tidyr)
+library(scales)
+library(grid)
+library(reshape2)
+library(phyloseq)
+library(magrittr)
+library(ggplot2)
+library(ggpubr)
+library(data.table)
+library(labdsv)
+otu = read.table(file="files/LGasv16SUN3.otu_table.txt", header=T, sep='\t',row.names = 1)
+head(otu)
+dim(otu)
+tax <- read.table(file="files/taxonomy.fix.16S.tsv", sep='\t', header=TRUE,row.names = 1)
+head(tax)
+dim(tax)
+tax <- select(tax,-Confidence)
+tax_filtered = separate(tax, Taxon, c("Kingdom","Phylum","Class","Order", "Family", "Genus","Species"), sep= ";", remove=TRUE)
+head(tax_filtered)
+taxmat <- as(as.matrix(tax_filtered),"matrix")
+TAX = tax_table(taxmat)
+otumat <- as(as.matrix(otu), "matrix")
+mode(otumat) <- "numeric"
+OTU = otu_table(otumat, taxa_are_rows = TRUE)
+otumat
+meta0 = read.table("files/Andrew16S_mappingfile.txt",
+                  header=TRUE,row.names=1,
+                  sep="\t",stringsAsFactors=FALSE)
+head(meta0)
+meta <- meta0[which(meta0$Owner %in% c("Andrew")),]
+head(meta)
+dim(meta)
+sampleData <- sample_data(meta)
+physeq = phyloseq(OTU,TAX,sampleData)
+physeq
+physeq.prune = prune_taxa(taxa_sums(physeq) > 0, physeq)
+physeq
+readcount = data.table(as(sample_data(physeq.prune), "data.frame"),
+                 TotalReads = sample_sums(physeq.prune), 
+                 keep.rownames = TRUE)
+setnames(readcount, "rn", "SampleID")
+readcount = readcount[order(readcount$TotalReads), c("SampleID", "TotalReads")]
+head(readcount)
+set.seed(711)
+physeq.prune.rarefy = rarefy_even_depth(physeq.prune, sample.size = 37702, replace = FALSE, trimOTUs = TRUE)
+physeq.prune.rarefy
+bacteria <- subset_taxa(physeq.prune.rarefy, Kingdom == "Bacteria")
+bacteria.con <- subset_samples(bacteria, Treatment == "Control")
+bacteria.june <- subset_samples(bacteria, Date == "June_2017")
+bacteria.nov <- subset_samples(bacteria, Date == "November_2017")
+bacteria.june.control <- subset_samples(bacteria.june, Treatment == "Control")
+bacteria.nov.control <- subset_samples(bacteria.nov, Treatment == "Control")
+bacteria.june.erle <- subset_samples(bacteria.june, Grass == "ERLE")
+bacteria.nov.erle <- subset_samples(bacteria.nov, Grass == "ERLE")
+bacteria.june.boer <- subset_samples(bacteria.june, Grass == "BOER")
+bacteria.nov.boer <- subset_samples(bacteria.nov, Grass == "BOER")
+```
+
+
+#Bacteria 
+
+
+####group classes with less than 1% representation into one category -  Control June 2017
+
+##Make taxonomy table into a matrix
+```{r}
+tax.bac.june.con <- as(tax_table(bacteria.june.control),"matrix")
+head(tax.bac.june.con)
+```
+
+##Relabel NA as Unknown
+
+```{r}
+tax.bac.june.con[is.na(tax.bac.june.con)] <- "Unknown"
+head(tax.bac.june.con)
+```
+
+###Convert tax table back to phyloseq object and generate phyloseq object with new tax table
+```{r}
+TAX.bac.june.con <- tax_table(tax.bac.june.con)
+```
+
+```{r}
+bac.june.con2 <- phyloseq(sample_data(bacteria.june.control),otu_table(bacteria.june.control),TAX.bac.june.con)
+bac.june.con2
+```
+
+##Create Abundace column
+```{r}
+bac.june.con0 = transform_sample_counts(bac.june.con2, 
+                                                      function(x) x / sum(x))
+```
+
+##make phyloseq object one file with taxonomic rank to Phlum reported
+
+```{r}
+glom.bac.june2 <- tax_glom(bac.june.con0,taxrank = 'Phylum')
+data_glom.bac.june2 <- psmelt(glom.bac.june2)
+data_glom.bac.june2$Phylum <- as.character(data_glom.bac.june2$Phylum)
+```
+
+##Find top 6 phyla
+
+```{r}
+unique(data_glom.bac.june2$Phylum)
+```
+
+#Subset top 6 phyla
+
+```{r}
+data_glom.bac.june2.top6 <- subset(data_glom.bac.june2, Phylum == "Proteobacteria" | Phylum == "Actinobacteria" | Phylum == "Acidobacteria" | Phylum == "Chloroflexi" | Phylum == "Bacteroidetes" | Phylum == "Planctomycetes")
+```
+
+```{r}
+unique(data_glom.bac.june2.top6$Phylum)
+```
+
+##create plot for top 6 phyla
+
+```{r}
+bac.june.con.plot <- ggplot(data_glom.bac.june2.top6,aes(Grass,Abundance,color=Phylum)) + geom_boxplot() +
+  scale_color_manual(values = c("salmon","darkorange2", "lightgreen", "gray26", "maroon", "steelblue3")) + labs(y= "Relative Abundance") + theme_bw(base_size = 20)
+```
+
+```{r}
+bac.june.con.plot
+```
+
+
+####group classes with less than 1% representation into one category -  Control November 2017
+
+##Make taxonomy table into a matrix
+```{r}
+tax.bac.nov.con <- as(tax_table(bacteria.nov.control),"matrix")
+head(tax.bac.nov.con)
+```
+
+##Relabel NA as Unknown
+
+```{r}
+tax.bac.nov.con[is.na(tax.bac.nov.con)] <- "Unknown"
+head(tax.bac.nov.con)
+```
+
+###Convert tax table back to phyloseq object and generate phyloseq object with new tax table
+```{r}
+TAX.bac.nov.con <- tax_table(tax.bac.nov.con)
+```
+
+```{r}
+bac.nov.con2 <- phyloseq(sample_data(bacteria.nov.control),otu_table(bacteria.nov.control),TAX.bac.nov.con)
+bac.nov.con2
+```
+
+##Create Abundace column
+
+```{r}
+bac.nov.con0 = transform_sample_counts(bac.nov.con2, 
+                                                      function(x) x / sum(x))
+```
+
+##make phyloseq object one file with taxonomic rank to Phlum reported
+
+```{r}
+glom.bac.nov2 <- tax_glom(bac.nov.con0,taxrank = 'Phylum')
+data_glom.bac.nov2 <- psmelt(glom.bac.nov2)
+data_glom.bac.nov2$Phylum <- as.character(data_glom.bac.nov2$Phylum)
+```
+
+##Find top 6 phyla
+
+```{r}
+unique((data_glom.bac.nov2$Phylum))
+```
+
+##Subset top 6 phyla
+
+```{r}
+data_glom.bac.nov2.top6 <- subset(data_glom.bac.nov2, Phylum == "Proteobacteria" | Phylum == "Actinobacteria" | Phylum == "Acidobacteria" | Phylum == "Chloroflexi" | Phylum == "Planctomycetes" | Phylum == "Bacteroidetes")
+```
+
+```{r}
+unique((data_glom.bac.nov2.top6$Phylum))
+```
+
+##create plot for top 6 phyla
+
+```{r}
+bac.nov.con.plot <- ggplot(data_glom.bac.nov2.top6,aes(Grass,Abundance,color=Phylum)) + geom_boxplot() +
+  scale_color_manual(values = c("salmon","darkorange2", "lightgreen", "gray26", "maroon", "steelblue3")) + labs(y= "Relative Abundance") + theme_bw(base_size = 20)
+```
+
+```{r}
+bac.nov.con.plot
+```
+
+
+#Fungi
+
+###STEP2: Transition data from UNOISE3 to Phyloseq
+
+
+####STEP2.1: Import otu table from amptk
+
+```{r}
+otu = read.table(file="files/FungiAD.otu_table.txt", header=T, sep='\t',row.names = 1)
+head(otu)
+dim(otu)
+
+tax <- read.table(file="files/FungiAD.ASVs.taxonomy.fix.txt", sep='\t', header=TRUE,row.names = 1)
+head(tax)
+
+dim(tax)
+
+taxmat <- as(tax,"matrix")
+head(taxmat)
+
+TAX = tax_table(taxmat)
+
+otumat <- as(as.matrix(otu), "matrix")
+mode(otumat) <- "numeric"
+OTU = otu_table(otumat, taxa_are_rows = TRUE)
+
+otumat
+
+meta0 = read.table("files/Andrew_ITS.mapping_file.txt",
+                  header=TRUE,row.names=1,
+                  sep="\t",stringsAsFactors=FALSE)
+meta0
+
+sampleData <- sample_data(meta0)
+
+
+physeq = phyloseq(OTU,TAX,sampleData)
+
+
+
+physeq
+
+
+physeq.prune = prune_taxa(taxa_sums(physeq) > 0, physeq)
+physeq
+
+readcount = data.table(as(sample_data(physeq.prune), "data.frame"),
+                 TotalReads = sample_sums(physeq.prune), 
+                 keep.rownames = TRUE)
+setnames(readcount, "rn", "SampleID")
+
+
+readcount = readcount[order(readcount$TotalReads), c("SampleID", "TotalReads")]
+head(readcount)
+
+set.seed(711)
+physeq.prune.rarefy = rarefy_even_depth(physeq.prune, sample.size = 4941, replace = FALSE, trimOTUs = TRUE)
+physeq.prune.rarefy
+
+physeq.prune.rarefy.fun <- subset_taxa(physeq.prune.rarefy,Kingdom == "Fungi")
+physeq.prune.rarefy.fun
+
+fun.con <- subset_samples(physeq.prune.rarefy.fun, Treatment == "Control")
+fun.june <- subset_samples(physeq.prune.rarefy.fun, Date == "June_2017")
+fun.nov <- subset_samples(physeq.prune.rarefy.fun, Date == "November_2017")
+fun.june.control <- subset_samples(fun.june, Treatment == "Control")
+fun.nov.control <- subset_samples(fun.nov, Treatment == "Control")
+fun.june.erle <- subset_samples(fun.june, Grass == "ERLE")
+fun.june.boer <- subset_samples(fun.june, Grass == "BOER")
+fun.nov.erle <- subset_samples(fun.nov, Grass == "ERLE")
+fun.nov.boer <- subset_samples(fun.nov, Grass == "BOER")
+```
+
+####group classes with less than 1% representation into one category - Fungi June 2017
+
+##Make taxonomy table into a matrix
+```{r}
+tax.fun.june.con <- as(tax_table(fun.june.control),"matrix")
+head(tax.fun.june.con)
+```
+
+##Relabel NA as Unknown
+
+```{r}
+tax.fun.june.con[is.na(tax.fun.june.con)] <- "Unknown"
+head(tax.fun.june.con)
+```
+
+###Convert tax table back to phyloseq object and generate phyloseq object with new tax table
+```{r}
+TAX.fun.june.con <- tax_table(tax.fun.june.con)
+```
+
+```{r}
+fun.june.con2 <- phyloseq(sample_data(fun.june.control),otu_table(fun.june.control),TAX.fun.june.con)
+fun.june.con2
+```
+
+###boxplot phylum
+
+```{r}
+fun.june.con0 = transform_sample_counts(fun.june.con2, 
+                                                      function(x) x / sum(x))
+```
+
+```{r}
+glom.fun.june2 <- tax_glom(fun.june.con0,taxrank = 'Class')
+data_glom.fun.june2 <- psmelt(glom.fun.june2)
+data_glom.fun.june2$Class <- as.character(data_glom.fun.june2$Class)
+```
+
+```{r}
+unique((data_glom.fun.june2$Class))
+```
+
+```{r}
+data_glom.fun.june2.top6 <- subset(data_glom.fun.june2, Class == "Dothideomycetes"  | Class ==  "Agaricomycetes"  | Class ==   "Eurotiomycetes"   | Class ==  "Sordariomycetes" | Class ==  
+   "Pezizomycetes"  | Class ==   "Leotiomycetes"  )
+```
+
+```{r}
+unique((data_glom.fun.june2.top6$Class))
+```
+
+
+```{r}
+fun.june.con.plot <- ggplot(data_glom.fun.june2.top6,aes(Grass,Abundance,color=Class)) + geom_boxplot() +
+  scale_color_manual(values = c("indianred1", "lightsalmon","khaki1","lightgreen", "lightblue1", "royalblue3")) + labs(y= "Relative Abundance") + theme_bw(base_size = 20)
+```
+
+```{r}
+fun.june.con.plot
+```
+
+
+####group classes with less than 1% representation into one category - Fungi Nov 2017
+
+##Make taxonomy table into a matrix
+```{r}
+tax.fun.nov.con <- as(tax_table(fun.nov.control),"matrix")
+head(tax.fun.nov.con)
+```
+
+##Relabel NA as Unknown
+
+```{r}
+tax.fun.nov.con[is.na(tax.fun.nov.con)] <- "Unknown"
+head(tax.fun.nov.con)
+```
+
+###Convert tax table back to phyloseq object and generate phyloseq object with new tax table
+```{r}
+TAX.fun.nov.con <- tax_table(tax.fun.nov.con)
+```
+
+```{r}
+fun.nov.con2 <- phyloseq(sample_data(fun.nov.control),otu_table(fun.nov.control),TAX.fun.nov.con)
+fun.nov.con2
+```
+
+
+```{r}
+fun.nov.con0 = transform_sample_counts(fun.nov.con2, 
+                                                      function(x) x / sum(x))
+```
+
+```{r}
+glom.fun.nov2 <- tax_glom(fun.nov.con0,taxrank = 'Class')
+data_glom.fun.nov2 <- psmelt(glom.fun.nov2)
+data_glom.fun.nov2$Class <- as.character(data_glom.fun.nov2$Class)
+```
+
+```{r}
+unique((data_glom.fun.nov2$Class))
+```
+
+```{r}
+data_glom.fun.nov2.top6 <- subset(data_glom.fun.nov2, Class == "Dothideomycetes"  | Class ==  "Agaricomycetes"  | Class ==   "Eurotiomycetes"   | Class ==  "Sordariomycetes" | Class ==  
+   "Pezizomycetes"  | Class ==   "Mortierellomycetes"  )
+```
+
+```{r}
+unique((data_glom.fun.nov2.top6$Class))
+```
+
+
+```{r}
+fun.nov.con.plot <- ggplot(data_glom.fun.nov2.top6,aes(Grass,Abundance,color=Class)) + geom_boxplot() +
+  scale_color_manual(values = c("indianred1", "lightsalmon","khaki1","grey26", "lightblue1", "royalblue3")) + labs(y= "Relative Abundance") + theme_bw(base_size = 20)
+```
+
+```{r}
+fun.nov.con.plot
+```
+
+
+#Create figure1
+
+
+```{r}
+figure1 <- ggarrange(bac.june.con.plot, bac.nov.con.plot, fun.june.con.plot, fun.nov.con.plot,
+                    labels = c("A", "B","C","D"),
+                    ncol = 2, nrow = 2)
+```
+
+
+
+```{r}
+figure1
+```
+
+##Save figure 1
+
+```{r}
+figure1
+ggsave("Figure1.png",width=12,height=7,dpi = 400)
+```
+
+
