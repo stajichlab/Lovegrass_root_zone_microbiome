@@ -136,6 +136,46 @@ fun.june.erle <- ggplot(data_glom.fun.june.erle2.top6,aes(Treatment,Abundance,co
 fun.june.erle
 ```
 
+#Stats comparing phylum abundance between treatments - Lovegrass June
+
+```{r}
+unique((data_glom.fun.erle2j$Class))
+```
+
+```{r}
+Dothideomycetes <- subset(data_glom.fun.erle2j, Class == "Dothideomycetes")
+Agaricomycetes <- subset(data_glom.fun.erle2j, Class == "Agaricomycetes")
+Eurotiomycetes <- subset(data_glom.fun.erle2j, Class == "Eurotiomycetes")
+Sordariomycetes <- subset(data_glom.fun.erle2j, Class == "Sordariomycetes")
+Pezizomycetes <- subset(data_glom.fun.erle2j, Class == "Pezizomycetes")
+Lecanoromycetes <- subset(data_glom.fun.erle2j, Class == "Lecanoromycetes")
+```
+
+```{r}
+Dothideomycetes$Treatment <- as.factor(Dothideomycetes$Treatment)
+Agaricomycetes$Treatment <- as.factor(Agaricomycetes$Treatment)
+Eurotiomycetes$Treatment <- as.factor(Eurotiomycetes$Treatment)
+Sordariomycetes$Treatment <- as.factor(Sordariomycetes$Treatment)
+Pezizomycetes$Treatment <- as.factor(Pezizomycetes$Treatment)
+Lecanoromycetes$Treatment <- as.factor(Lecanoromycetes$Treatment)
+```
+
+
+```{r}
+kw.1 <- kruskal.test(Abundance ~ Treatment,data = Dothideomycetes)
+kw.1
+kw.2 <-kruskal.test(Abundance ~ Treatment,data = Agaricomycetes)
+kw.2
+kw.3 <- kruskal.test(Abundance ~ Treatment,data = Eurotiomycetes)
+kw.3
+kw.4 <- kruskal.test(Abundance ~ Treatment,data = Sordariomycetes)
+kw.4
+kw.5 <- kruskal.test(Abundance ~ Treatment,data = Pezizomycetes)
+kw.5
+kw.6 <- kruskal.test(Abundance ~ Treatment,data = Lecanoromycetes)
+kw.6
+```
+
 
 ####group classes with less than 1% representation into one category - Erle November
 
@@ -196,6 +236,46 @@ fun.nov.erle <- ggplot(data_glom.fun.nov.erle2.top6,aes(Treatment,Abundance,colo
 fun.nov.erle
 ```
 
+#Stats comparing phylum abundance between treatments - Lovegrass November
+
+```{r}
+unique((data_glom.fun.erle2n$Class))
+```
+
+```{r}
+Dothideomycetes <- subset(data_glom.fun.erle2n, Class == "Dothideomycetes")
+Eurotiomycetes <- subset(data_glom.fun.erle2n, Class == "Eurotiomycetes")
+Sordariomycetes <- subset(data_glom.fun.erle2n, Class == "Sordariomycetes")
+Pezizomycetes <- subset(data_glom.fun.erle2n, Class == "Pezizomycetes")
+Agaricomycetes <- subset(data_glom.fun.erle2n, Class == "Agaricomycetes")
+Tremellomycetes <- subset(data_glom.fun.erle2n, Class == "Tremellomycetes")
+```
+
+```{r}
+Dothideomycetes$Treatment <- as.factor(Dothideomycetes$Treatment)
+Eurotiomycetes$Treatment <- as.factor(Eurotiomycetes$Treatment)
+Sordariomycetes$Treatment <- as.factor(Sordariomycetes$Treatment)
+Pezizomycetes$Treatment <- as.factor(Pezizomycetes$Treatment)
+Agaricomycetes$Treatment <- as.factor(Agaricomycetes$Treatment)
+Tremellomycetes$Treatment <- as.factor(Tremellomycetes$Treatment)
+```
+
+
+```{r}
+kw.1 <- kruskal.test(Abundance ~ Treatment,data = Dothideomycetes)
+kw.1
+kw.2 <-kruskal.test(Abundance ~ Treatment,data = Eurotiomycetes)
+kw.2
+kw.3 <- kruskal.test(Abundance ~ Treatment,data = Sordariomycetes)
+kw.3
+kw.4 <- kruskal.test(Abundance ~ Treatment,data = Pezizomycetes)
+kw.4
+kw.5 <- kruskal.test(Abundance ~ Treatment,data = Agaricomycetes)
+kw.5
+kw.6 <- kruskal.test(Abundance ~ Treatment,data = Tremellomycetes)
+kw.6
+```
+
 
 ####group classes with less than 1% representation into one category - Boer June
 
@@ -254,6 +334,46 @@ fun.june.boer <- ggplot(data_glom.fun.june.boer2.top6,aes(Treatment,Abundance,co
 
 ```{r}
 fun.june.boer
+```
+
+#Stats comparing phylum abundance between treatments - black grama June
+
+```{r}
+unique((data_glom.fun.boer2j$Class))
+```
+
+```{r}
+Dothideomycetes.june <- subset(data_glom.fun.boer2j, Class == "Dothideomycetes")
+Agaricomycetes.june <- subset(data_glom.fun.boer2j, Class == "Agaricomycetes")
+Pezizomycetes.june <- subset(data_glom.fun.boer2j, Class == "Pezizomycetes")
+Eurotiomycetes.june <- subset(data_glom.fun.boer2j, Class == "Eurotiomycetes")
+Sordariomycetes.june <- subset(data_glom.fun.boer2j, Class == "Sordariomycetes")
+Leotiomycetes.june <- subset(data_glom.fun.boer2j, Class == "Leotiomycetes")
+```
+
+```{r}
+Dothideomycetes.june$Treatment <- as.factor(Dothideomycetes.june$Treatment)
+Agaricomycetes.june$Treatment <- as.factor(Agaricomycetes.june$Treatment)
+Pezizomycetes.june$Treatment <- as.factor(Pezizomycetes.june$Treatment)
+Eurotiomycetes.june$Treatment <- as.factor(Eurotiomycetes.june$Treatment)
+Sordariomycetes.june$Treatment <- as.factor(Sordariomycetes.june$Treatment)
+Leotiomycetes.june$Treatment <- as.factor(Leotiomycetes.june$Treatment)
+```
+
+
+```{r}
+kw.1 <- kruskal.test(Abundance ~ Treatment,data = Dothideomycetes.june)
+kw.1
+kw.2 <-kruskal.test(Abundance ~ Treatment,data = Agaricomycetes.june)
+kw.2
+kw.3 <- kruskal.test(Abundance ~ Treatment,data = Pezizomycetes.june)
+kw.3
+kw.4 <- kruskal.test(Abundance ~ Treatment,data = Eurotiomycetes.june)
+kw.4
+kw.5 <- kruskal.test(Abundance ~ Treatment,data = Sordariomycetes.june)
+kw.5
+kw.6 <- kruskal.test(Abundance ~ Treatment,data = Leotiomycetes.june)
+kw.6
 ```
 
 
@@ -331,6 +451,46 @@ figure3
 ```{r}
 figure3
 ggsave("Figure3.png",width=12,height=8,dpi = 400)
+```
+
+#Stats comparing phylum abundance between treatments - black grama November
+
+```{r}
+unique((data_glom.fun.boer2n$Class))
+```
+
+```{r}
+Dothideomycetes.nov <- subset(data_glom.fun.boer2n, Class == "Dothideomycetes")
+Agaricomycetes.nov <- subset(data_glom.fun.boer2n, Class == "Agaricomycetes")
+Pezizomycetes.nov <- subset(data_glom.fun.boer2n, Class == "Pezizomycetes")
+Sordariomycetes.nov <- subset(data_glom.fun.boer2n, Class == "Sordariomycetes")
+Eurotiomycetes.nov <- subset(data_glom.fun.boer2n, Class == "Eurotiomycetes")
+Lecanoromycetes.nov <- subset(data_glom.fun.boer2n, Class == "Lecanoromycetes")
+```
+
+```{r}
+Dothideomycetes.nov$Treatment <- as.factor(Dothideomycetes.nov$Treatment)
+Agaricomycetes.nov$Treatment <- as.factor(Agaricomycetes.nov$Treatment)
+Pezizomycetes.nov$Treatment <- as.factor(Pezizomycetes.nov$Treatment)
+Sordariomycetes.nov$Treatment <- as.factor(Sordariomycetes.nov$Treatment)
+Eurotiomycetes.nov$Treatment <- as.factor(Eurotiomycetes.nov$Treatment)
+Lecanoromycetes.nov$Treatment <- as.factor(Lecanoromycetes.nov$Treatment)
+```
+
+
+```{r}
+kw.1 <- kruskal.test(Abundance ~ Treatment,data = Dothideomycetes.nov)
+kw.1
+kw.2 <-kruskal.test(Abundance ~ Treatment,data = Agaricomycetes.nov)
+kw.2
+kw.3 <- kruskal.test(Abundance ~ Treatment,data = Pezizomycetes.nov)
+kw.3
+kw.4 <- kruskal.test(Abundance ~ Treatment,data = Sordariomycetes.nov)
+kw.4
+kw.5 <- kruskal.test(Abundance ~ Treatment,data = Eurotiomycetes.nov)
+kw.5
+kw.6 <- kruskal.test(Abundance ~ Treatment,data = Lecanoromycetes.nov)
+kw.6
 ```
 
 
