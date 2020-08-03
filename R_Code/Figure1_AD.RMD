@@ -230,12 +230,109 @@ bac.nov.con.plot
 ```
 
 
+###Stats comparing phyla abundance between grasses - June
+
+```{r}
+Acidobacteria <- subset(data_glom.bac.june2, Phylum == "Acidobacteria")
+Actinobacteria <- subset(data_glom.bac.june2, Phylum == "Actinobacteria")
+Bacteroidetes <- subset(data_glom.bac.june2, Phylum == "Bacteroidetes")
+Chloroflexi <- subset(data_glom.bac.june2, Phylum == "Chloroflexi")
+Planctomycetes <- subset(data_glom.bac.june2, Phylum == "Planctomycetes")
+Proteobacteria <- subset(data_glom.bac.june2, Phylum == "Proteobacteria")
+```
+
+
+```{r}
+wilcox.1 <- wilcox.test(Abundance ~ Grass,data = Acidobacteria)
+wilcox.1
+wilcox.2 <- wilcox.test(Abundance ~ Grass,data = Actinobacteria)
+wilcox.2
+wilcox.3 <- wilcox.test(Abundance ~ Grass,data = Bacteroidetes)
+wilcox.3
+wilcox.4 <- wilcox.test(Abundance ~ Grass,data = Chloroflexi)
+wilcox.4
+wilcox.5 <- wilcox.test(Abundance ~ Grass,data = Planctomycetes)
+wilcox.5
+wilcox.6 <- wilcox.test(Abundance ~ Grass,data = Proteobacteria)
+wilcox.6
+```
+
+###Stats comparing phyla abundance between grasses - Nov
+
+```{r}
+Acidobacteria.nov <- subset(data_glom.bac.nov2, Phylum == "Acidobacteria")
+Actinobacteria.nov <- subset(data_glom.bac.nov2, Phylum == "Actinobacteria")
+Bacteroidetes.nov <- subset(data_glom.bac.nov2, Phylum == "Bacteroidetes")
+Chloroflexi.nov <- subset(data_glom.bac.nov2, Phylum == "Chloroflexi")
+Planctomycetes.nov <- subset(data_glom.bac.nov2, Phylum == "Planctomycetes")
+Proteobacteria.nov <- subset(data_glom.bac.nov2, Phylum == "Proteobacteria")
+```
+
+
+```{r}
+wilcox.1 <- wilcox.test(Abundance ~ Grass,data = Acidobacteria.nov)
+wilcox.1
+wilcox.2 <- wilcox.test(Abundance ~ Grass,data = Actinobacteria.nov)
+wilcox.2
+wilcox.3 <- wilcox.test(Abundance ~ Grass,data = Bacteroidetes.nov)
+wilcox.3
+wilcox.4 <- wilcox.test(Abundance ~ Grass,data = Chloroflexi.nov)
+wilcox.4
+wilcox.5 <- wilcox.test(Abundance ~ Grass,data = Planctomycetes.nov)
+wilcox.5
+wilcox.6 <- wilcox.test(Abundance ~ Grass,data = Proteobacteria.nov)
+wilcox.6
+```
+
+
+##Stats comparing season
+
+```{r}
+bac.con0 = transform_sample_counts(bacteria.con, 
+                                                      function(x) x / sum(x))
+```
+
+##make phyloseq object one file with taxonomic rank to Phlum reported
+
+```{r}
+glom.bac.con1 <- tax_glom(bac.con0,taxrank = 'Phylum')
+data_glom.bac.con2 <- psmelt(glom.bac.con1)
+data_glom.bac.con2$Phylum <- as.character(data_glom.bac.con2$Phylum)
+```
+
+```{r}
+unique(data_glom.bac.con2$Phylum)
+```
+
+
+```{r}
+Acidobacteria.con <- subset(data_glom.bac.con2, Phylum == "Acidobacteria")
+Actinobacteria.con <- subset(data_glom.bac.con2, Phylum == "Actinobacteria")
+Bacteroidetes.con <- subset(data_glom.bac.con2, Phylum == "Bacteroidetes")
+Chloroflexi.con <- subset(data_glom.bac.con2, Phylum == "Chloroflexi")
+Planctomycetes.con <- subset(data_glom.bac.con2, Phylum == "Planctomycetes")
+Proteobacteria.con<- subset(data_glom.bac.con2, Phylum == "Proteobacteria")
+```
+
+
+
+```{r}
+wilcox.1 <- wilcox.test(Abundance ~ Date,data = Acidobacteria.con)
+wilcox.1
+wilcox.2 <- wilcox.test(Abundance ~ Date,data = Actinobacteria.con)
+wilcox.2
+wilcox.3 <- wilcox.test(Abundance ~ Date,data = Bacteroidetes.con)
+wilcox.3
+wilcox.4 <- wilcox.test(Abundance ~ Date,data = Chloroflexi.con)
+wilcox.4
+wilcox.5 <- wilcox.test(Abundance ~ Date,data = Planctomycetes.con)
+wilcox.5
+wilcox.6 <- wilcox.test(Abundance ~ Date,data = Proteobacteria.con)
+wilcox.6
+```
+
+
 #Fungi
-
-###STEP2: Transition data from UNOISE3 to Phyloseq
-
-
-####STEP2.1: Import otu table from amptk
 
 ```{r}
 otu = read.table(file="files/FungiAD.otu_table.txt", header=T, sep='\t',row.names = 1)
@@ -446,6 +543,115 @@ figure1
 ```{r}
 figure1
 ggsave("Figure1.png",width=12,height=7,dpi = 400)
+```
+
+
+###Stats comparing phyla abundance between grasses - June
+
+```{r}
+unique((data_glom.fun.june2$Class))
+```
+
+```{r}
+Dothideomycetes <- subset(data_glom.fun.june2, Class == "Dothideomycetes")
+Agaricomycetes <- subset(data_glom.fun.june2, Class == "Agaricomycetes")
+Eurotiomycetes <- subset(data_glom.fun.june2, Class == "Eurotiomycetes")
+Sordariomycetes <- subset(data_glom.fun.june2, Class == "Sordariomycetes")
+Pezizomycetes <- subset(data_glom.fun.june2, Class == "Pezizomycetes")
+Leotiomycetes <- subset(data_glom.fun.june2, Class == "Leotiomycetes")
+```
+
+
+```{r}
+wilcox.1 <- wilcox.test(Abundance ~ Grass,data = Dothideomycetes)
+wilcox.1
+wilcox.2 <- wilcox.test(Abundance ~ Grass,data = Agaricomycetes)
+wilcox.2
+wilcox.3 <- wilcox.test(Abundance ~ Grass,data = Eurotiomycetes)
+wilcox.3
+wilcox.4 <- wilcox.test(Abundance ~ Grass,data = Sordariomycetes)
+wilcox.4
+wilcox.5 <- wilcox.test(Abundance ~ Grass,data = Pezizomycetes)
+wilcox.5
+wilcox.6 <- wilcox.test(Abundance ~ Grass,data = Leotiomycetes)
+wilcox.6
+```
+
+###Stats comparing phyla abundance between grasses - Nov
+
+```{r}
+unique((data_glom.fun.nov2$Class))
+```
+
+```{r}
+Dothideomycetes.nov <- subset(data_glom.fun.nov2, Class == "Dothideomycetes")
+Agaricomycetes.nov <- subset(data_glom.fun.nov2, Class == "Agaricomycetes")
+Eurotiomycetes.nov <- subset(data_glom.fun.nov2, Class == "Eurotiomycetes")
+Sordariomycetes.nov <- subset(data_glom.fun.nov2, Class == "Sordariomycetes")
+Pezizomycetes.nov <- subset(data_glom.fun.nov2, Class == "Pezizomycetes")
+Mortierellomycetes.nov <- subset(data_glom.fun.nov2, Class == "Mortierellomycetes")
+```
+
+
+```{r}
+wilcox.1 <- wilcox.test(Abundance ~ Grass,data = Dothideomycetes.nov)
+wilcox.1
+wilcox.2 <- wilcox.test(Abundance ~ Grass,data = Agaricomycetes.nov)
+wilcox.2
+wilcox.3 <- wilcox.test(Abundance ~ Grass,data = Eurotiomycetes.nov)
+wilcox.3
+wilcox.4 <- wilcox.test(Abundance ~ Grass,data = Sordariomycetes.nov)
+wilcox.4
+wilcox.5 <- wilcox.test(Abundance ~ Grass,data = Pezizomycetes.nov)
+wilcox.5
+wilcox.6 <- wilcox.test(Abundance ~ Grass,data = Mortierellomycetes.nov)
+wilcox.6
+```
+
+
+##Stats comparing season
+
+```{r}
+fun.con0 = transform_sample_counts(fun.con, 
+                                                      function(x) x / sum(x))
+```
+
+##make phyloseq object one file with taxonomic rank to Phlum reported
+
+```{r}
+glom.fun.con1 <- tax_glom(fun.con0,taxrank = 'Class')
+data_glom.fun.con2 <- psmelt(glom.fun.con1)
+data_glom.fun.con2$Class <- as.character(data_glom.fun.con2$Class)
+```
+
+```{r}
+unique(data_glom.fun.con2$Class)
+```
+
+
+```{r}
+Dothideomycetes.con <- subset(data_glom.fun.con2, Class == "Dothideomycetes")
+Agaricomycetes.con <- subset(data_glom.fun.con2, Class == "Agaricomycetes")
+Eurotiomycetes.con <- subset(data_glom.fun.con2, Class == "Eurotiomycetes")
+Sordariomycetes.con <- subset(data_glom.fun.con2, Class == "Sordariomycetes")
+Pezizomycetes.con <- subset(data_glom.fun.con2, Class == "Pezizomycetes")
+Leotiomycetes.con <- subset(data_glom.fun.con2, Class == "Leotiomycetes")
+```
+
+
+```{r}
+wilcox.1 <- wilcox.test(Abundance ~ Grass,data = Dothideomycetes.con)
+wilcox.1
+wilcox.2 <- wilcox.test(Abundance ~ Grass,data = Agaricomycetes.con)
+wilcox.2
+wilcox.3 <- wilcox.test(Abundance ~ Grass,data = Eurotiomycetes.con)
+wilcox.3
+wilcox.4 <- wilcox.test(Abundance ~ Grass,data = Sordariomycetes.con)
+wilcox.4
+wilcox.5 <- wilcox.test(Abundance ~ Grass,data = Pezizomycetes.con)
+wilcox.5
+wilcox.6 <- wilcox.test(Abundance ~ Grass,data = Leotiomycetes.con)
+wilcox.6
 ```
 
 
