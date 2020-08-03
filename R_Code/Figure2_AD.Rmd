@@ -133,6 +133,48 @@ bac.june.erle
 ```
 
 
+
+#Stats comparing phylum abundance between treatments - Lovegrass June
+
+```{r}
+unique((data_glom.bac.june.erle2$Phylum))
+```
+
+```{r}
+Acidobacteria <- subset(data_glom.bac.june.erle2, Phylum == "Acidobacteria")
+Actinobacteria <- subset(data_glom.bac.june.erle2, Phylum == "Actinobacteria")
+Bacteroidetes <- subset(data_glom.bac.june.erle2, Phylum == "Bacteroidetes")
+Chloroflexi <- subset(data_glom.bac.june.erle2, Phylum == "Chloroflexi")
+Planctomycetes <- subset(data_glom.bac.june.erle2, Phylum == "Planctomycetes")
+Proteobacteria <- subset(data_glom.bac.june.erle2, Phylum == "Proteobacteria")
+```
+
+```{r}
+Acidobacteria$Treatment <- as.factor(Acidobacteria$Treatment)
+Actinobacteria$Treatment <- as.factor(Actinobacteria$Treatment)
+Bacteroidetes$Treatment <- as.factor(Bacteroidetes$Treatment)
+Chloroflexi$Treatment <- as.factor(Chloroflexi$Treatment)
+Planctomycetes$Treatment <- as.factor(Planctomycetes$Treatment)
+Proteobacteria$Treatment <- as.factor(Proteobacteria$Treatment)
+```
+
+
+```{r}
+kw.1 <- kruskal.test(Abundance ~ Treatment,data = Acidobacteria)
+kw.1
+kw.2 <-kruskal.test(Abundance ~ Treatment,data = Actinobacteria)
+kw.2
+kw.3 <- kruskal.test(Abundance ~ Treatment,data = Bacteroidetes)
+kw.3
+kw.4 <- kruskal.test(Abundance ~ Treatment,data = Chloroflexi)
+kw.4
+kw.5 <- kruskal.test(Abundance ~ Treatment,data = Planctomycetes)
+kw.5
+kw.6 <- kruskal.test(Abundance ~ Treatment,data = Proteobacteria)
+kw.6
+```
+
+
 ####group classes with less than 1% representation into one category -  ERLE November
 
 ##Make taxonomy table into a matrix
@@ -189,6 +231,46 @@ bac.nov.erle <- ggplot(data_glom.bac.nov.erle2.top6,aes(Treatment,Abundance,colo
 
 ```{r}
 bac.nov.erle
+```
+
+#Stats comparing phylum abundance between treatments - Lovegrass November
+
+```{r}
+unique((data_glom.bac.nov.erle2$Phylum))
+```
+
+```{r}
+Acidobacteria.nov<- subset(data_glom.bac.nov.erle2, Phylum == "Acidobacteria")
+Actinobacteria.nov <- subset(data_glom.bac.nov.erle2, Phylum == "Actinobacteria")
+Bacteroidetes.nov <- subset(data_glom.bac.nov.erle2, Phylum == "Bacteroidetes")
+Chloroflexi.nov <- subset(data_glom.bac.nov.erle2, Phylum == "Chloroflexi")
+Planctomycetes.nov <- subset(data_glom.bac.nov.erle2, Phylum == "Planctomycetes")
+Proteobacteria.nov <- subset(data_glom.bac.nov.erle2, Phylum == "Proteobacteria")
+```
+
+```{r}
+Acidobacteria.nov$Treatment <- as.factor(Acidobacteria.nov$Treatment)
+Actinobacteria.nov$Treatment <- as.factor(Actinobacteria.nov$Treatment)
+Bacteroidetes.nov$Treatment <- as.factor(Bacteroidetes.nov$Treatment)
+Chloroflexi.nov$Treatment <- as.factor(Chloroflexi.nov$Treatment)
+Planctomycetes.nov$Treatment <- as.factor(Planctomycetes.nov$Treatment)
+Proteobacteria.nov$Treatment <- as.factor(Proteobacteria.nov$Treatment)
+```
+
+
+```{r}
+kw.1 <- kruskal.test(Abundance ~ Treatment,data = Acidobacteria.nov)
+kw.1
+kw.2 <-kruskal.test(Abundance ~ Treatment,data = Actinobacteria.nov)
+kw.2
+kw.3 <- kruskal.test(Abundance ~ Treatment,data = Bacteroidetes.nov)
+kw.3
+kw.4 <- kruskal.test(Abundance ~ Treatment,data = Chloroflexi.nov)
+kw.4
+kw.5 <- kruskal.test(Abundance ~ Treatment,data = Planctomycetes.nov)
+kw.5
+kw.6 <- kruskal.test(Abundance ~ Treatment,data = Proteobacteria.nov)
+kw.6
 ```
 
 
@@ -250,6 +332,46 @@ bac.june.boer <- ggplot(data_glom.bac.june.boer2.top6,aes(Treatment,Abundance,co
 
 ```{r}
 bac.june.boer
+```
+
+#Stats comparing phylum abundance between treatments - black grama June
+
+```{r}
+unique((data_glom.bac.june.boer2$Phylum))
+```
+
+```{r}
+Acidobacteria.june <- subset(data_glom.bac.june.boer2, Phylum == "Acidobacteria")
+Actinobacteria.june <- subset(data_glom.bac.june.boer2, Phylum == "Actinobacteria")
+Bacteroidetes.june <- subset(data_glom.bac.june.boer2, Phylum == "Bacteroidetes")
+Chloroflexi.june <- subset(data_glom.bac.june.boer2, Phylum == "Chloroflexi")
+Planctomycetes.june <- subset(data_glom.bac.june.boer2, Phylum == "Planctomycetes")
+Proteobacteria.june <- subset(data_glom.bac.june.boer2, Phylum == "Proteobacteria")
+```
+
+```{r}
+Acidobacteria.june$Treatment <- as.factor(Acidobacteria.june$Treatment)
+Actinobacteria.june$Treatment <- as.factor(Actinobacteria.june$Treatment)
+Bacteroidetes.june$Treatment <- as.factor(Bacteroidetes.june$Treatment)
+Chloroflexi.june$Treatment <- as.factor(Chloroflexi.june$Treatment)
+Planctomycetes.june$Treatment <- as.factor(Planctomycetes.june$Treatment)
+Proteobacteria.june$Treatment <- as.factor(Proteobacteria.june$Treatment)
+```
+
+
+```{r}
+kw.1 <- kruskal.test(Abundance ~ Treatment,data = Acidobacteria.june)
+kw.1
+kw.2 <-kruskal.test(Abundance ~ Treatment,data = Actinobacteria.june)
+kw.2
+kw.3 <- kruskal.test(Abundance ~ Treatment,data = Bacteroidetes.june)
+kw.3
+kw.4 <- kruskal.test(Abundance ~ Treatment,data = Chloroflexi.june)
+kw.4
+kw.5 <- kruskal.test(Abundance ~ Treatment,data = Planctomycetes.june)
+kw.5
+kw.6 <- kruskal.test(Abundance ~ Treatment,data = Proteobacteria.june)
+kw.6
 ```
 
 
@@ -327,4 +449,44 @@ figure2
 ```{r}
 figure2
 ggsave("Figure2.png",width=12,height=7,dpi = 400)
+```
+
+#Stats comparing phylum abundance between treatments - black grama June
+
+```{r}
+unique((data_glom.bac.nov.boer2$Phylum))
+```
+
+```{r}
+Acidobacteria.nov <- subset(data_glom.bac.nov.boer2, Phylum == "Acidobacteria")
+Actinobacteria.nov <- subset(data_glom.bac.nov.boer2, Phylum == "Actinobacteria")
+Bacteroidetes.nov <- subset(data_glom.bac.nov.boer2, Phylum == "Bacteroidetes")
+Chloroflexi.nov <- subset(data_glom.bac.nov.boer2, Phylum == "Chloroflexi")
+Planctomycetes.nov <- subset(data_glom.bac.nov.boer2, Phylum == "Planctomycetes")
+Proteobacteria.nov <- subset(data_glom.bac.nov.boer2, Phylum == "Proteobacteria")
+```
+
+```{r}
+Acidobacteria.nov$Treatment <- as.factor(Acidobacteria.nov$Treatment)
+Actinobacteria.nov$Treatment <- as.factor(Actinobacteria.nov$Treatment)
+Bacteroidetes.nov$Treatment <- as.factor(Bacteroidetes.nov$Treatment)
+Chloroflexi.nov$Treatment <- as.factor(Chloroflexi.nov$Treatment)
+Planctomycetes.nov$Treatment <- as.factor(Planctomycetes.nov$Treatment)
+Proteobacteria.nov$Treatment <- as.factor(Proteobacteria.nov$Treatment)
+```
+
+
+```{r}
+kw.1 <- kruskal.test(Abundance ~ Treatment,data = Acidobacteria.nov)
+kw.1
+kw.2 <-kruskal.test(Abundance ~ Treatment,data = Actinobacteria.nov)
+kw.2
+kw.3 <- kruskal.test(Abundance ~ Treatment,data = Bacteroidetes.nov)
+kw.3
+kw.4 <- kruskal.test(Abundance ~ Treatment,data = Chloroflexi.nov)
+kw.4
+kw.5 <- kruskal.test(Abundance ~ Treatment,data = Planctomycetes.nov)
+kw.5
+kw.6 <- kruskal.test(Abundance ~ Treatment,data = Proteobacteria.nov)
+kw.6
 ```
