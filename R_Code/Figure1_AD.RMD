@@ -284,34 +284,38 @@ wilcox.6 <- wilcox.test(Abundance ~ Grass,data = Proteobacteria.nov)
 wilcox.6
 ```
 
-
-##Stats comparing season
+##Stats comparing season - Lovegrass
 
 ```{r}
-bac.con0 = transform_sample_counts(bacteria.con, 
+bacteria.con.erle <- subset_samples(bacteria.con, Grass == "ERLE")
+```
+
+
+```{r}
+bac.con0 = transform_sample_counts(bacteria.con.erle, 
                                                       function(x) x / sum(x))
 ```
 
 ##make phyloseq object one file with taxonomic rank to Phlum reported
 
 ```{r}
-glom.bac.con1 <- tax_glom(bac.con0,taxrank = 'Phylum')
-data_glom.bac.con2 <- psmelt(glom.bac.con1)
-data_glom.bac.con2$Phylum <- as.character(data_glom.bac.con2$Phylum)
+glom.bac.erle1 <- tax_glom(bac.con0,taxrank = 'Phylum')
+data_glom.bac.erle2 <- psmelt(glom.bac.erle1)
+data_glom.bac.erle2$Phylum <- as.character(data_glom.bac.erle2$Phylum)
 ```
 
 ```{r}
-unique(data_glom.bac.con2$Phylum)
+unique(data_glom.bac.erle2$Phylum)
 ```
 
 
 ```{r}
-Acidobacteria.con <- subset(data_glom.bac.con2, Phylum == "Acidobacteria")
-Actinobacteria.con <- subset(data_glom.bac.con2, Phylum == "Actinobacteria")
-Bacteroidetes.con <- subset(data_glom.bac.con2, Phylum == "Bacteroidetes")
-Chloroflexi.con <- subset(data_glom.bac.con2, Phylum == "Chloroflexi")
-Planctomycetes.con <- subset(data_glom.bac.con2, Phylum == "Planctomycetes")
-Proteobacteria.con<- subset(data_glom.bac.con2, Phylum == "Proteobacteria")
+Acidobacteria.con <- subset(data_glom.bac.erle2, Phylum == "Acidobacteria")
+Actinobacteria.con <- subset(data_glom.bac.erle2, Phylum == "Actinobacteria")
+Bacteroidetes.con <- subset(data_glom.bac.erle2, Phylum == "Bacteroidetes")
+Chloroflexi.con <- subset(data_glom.bac.erle2, Phylum == "Chloroflexi")
+Planctomycetes.con <- subset(data_glom.bac.erle2, Phylum == "Planctomycetes")
+Proteobacteria.con<- subset(data_glom.bac.erle2, Phylum == "Proteobacteria")
 ```
 
 
@@ -328,6 +332,60 @@ wilcox.4
 wilcox.5 <- wilcox.test(Abundance ~ Date,data = Planctomycetes.con)
 wilcox.5
 wilcox.6 <- wilcox.test(Abundance ~ Date,data = Proteobacteria.con)
+wilcox.6
+```
+
+
+
+
+##Stats comparing season - black grama
+
+```{r}
+bacteria.con.boer <- subset_samples(bacteria.con, Grass == "BOER")
+```
+
+
+```{r}
+bac.con0 = transform_sample_counts(bacteria.con.boer, 
+                                                      function(x) x / sum(x))
+```
+
+##make phyloseq object one file with taxonomic rank to Phlum reported
+
+```{r}
+glom.bac.boer1 <- tax_glom(bac.con0,taxrank = 'Phylum')
+data_glom.bac.boer2 <- psmelt(glom.bac.boer1)
+data_glom.bac.boer2$Phylum <- as.character(data_glom.bac.boer2$Phylum)
+```
+
+```{r}
+unique(data_glom.bac.boer2$Phylum)
+```
+
+
+```{r}
+Acidobacteria.con2 <- subset(data_glom.bac.boer2, Phylum == "Acidobacteria")
+Actinobacteria.con2 <- subset(data_glom.bac.boer2, Phylum == "Actinobacteria")
+Bacteroidetes.con2 <- subset(data_glom.bac.boer2, Phylum == "Bacteroidetes")
+Chloroflexi.con2 <- subset(data_glom.bac.boer2, Phylum == "Chloroflexi")
+Planctomycetes.con2 <- subset(data_glom.bac.boer2, Phylum == "Planctomycetes")
+Proteobacteria.con2 <- subset(data_glom.bac.boer2, Phylum == "Proteobacteria")
+```
+
+
+
+```{r}
+wilcox.1 <- wilcox.test(Abundance ~ Date,data = Acidobacteria.con2)
+wilcox.1
+wilcox.2 <- wilcox.test(Abundance ~ Date,data = Actinobacteria.con2)
+wilcox.2
+wilcox.3 <- wilcox.test(Abundance ~ Date,data = Bacteroidetes.con2)
+wilcox.3
+wilcox.4 <- wilcox.test(Abundance ~ Date,data = Chloroflexi.con2)
+wilcox.4
+wilcox.5 <- wilcox.test(Abundance ~ Date,data = Planctomycetes.con2)
+wilcox.5
+wilcox.6 <- wilcox.test(Abundance ~ Date,data = Proteobacteria.con2)
 wilcox.6
 ```
 
