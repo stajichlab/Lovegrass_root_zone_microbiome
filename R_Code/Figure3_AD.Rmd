@@ -241,8 +241,8 @@ fun.nov.erle
 ```
 
 ```{r}
-Pre_Post_Fun.treatment.plot = ggarrange(fun.june.erle, fun.nov.erle, ncol=2, common.legend = TRUE, legend = "right")#, labels = c("A", "B"))
-Pre_Post_Fun.treatment.plot
+Pre_Post_Fun.erle.plot = ggarrange(fun.june.erle, fun.nov.erle, ncol=2, common.legend = TRUE, legend = "right")#, labels = c("A", "B"))
+Pre_Post_Fun.erle.plot
 ```
 
 #Stats comparing phylum abundance between treatments - Lovegrass November
@@ -338,7 +338,10 @@ unique((data_glom.fun.june.boer2.top6$Class))
 
 ```{r}
 fun.june.boer <- ggplot(data_glom.fun.june.boer2.top6,aes(Treatment,Abundance,color=Class)) + geom_boxplot() +
-  scale_color_manual(values = c("indianred1", "lightsalmon","gray26","lightgreen", "lightblue1", "royalblue3")) + labs(y= "Relative Abundance") + theme_bw(base_size = 20) + theme(axis.text.x = element_text(angle = 90))
+  scale_color_manual(values = c("indianred1", "lightsalmon","gray26","lightgreen", "lightblue1", "royalblue3")) + 
+  theme_bw(base_size = 20) + 
+  labs(y= "Relative Abundance", x = "") + 
+  ggtitle("C) BOER Pre monsoon")
 ```
 
 ```{r}
@@ -438,7 +441,9 @@ unique((data_glom.fun.nov.boer2.top6$Class))
 
 ```{r}
 fun.nov.boer <- ggplot(data_glom.fun.nov.boer2.top6,aes(Treatment,Abundance,color=Class)) + geom_boxplot() +
-  scale_color_manual(values = c("indianred1", "lightsalmon","gray26","lightgreen", "lightblue1", "royalblue3")) + labs(y= "Relative Abundance") + theme_bw(base_size = 20) + theme(axis.text.x = element_text(angle = 90))
+  scale_color_manual(values = c("indianred1", "lightsalmon","gray26","lightgreen", "lightblue1", "royalblue3")) + theme_bw(base_size = 20) + 
+  labs(y= "", x = "") + 
+  ggtitle("D) BOER Pre monsoon")
 ```
 
 ```{r}
@@ -446,20 +451,39 @@ fun.nov.boer
 ```
 
 ```{r}
-figure3 <- ggarrange(fun.june.erle, fun.nov.erle, fun.june.boer, fun.nov.boer,
-                    labels = c("A", "B","C","D"),
-                    ncol = 2, nrow = 2)
+Pre_Post_Fun.treatment.plot = ggarrange(fun.june.boer, fun.nov.boer, ncol=2, common.legend = TRUE, legend = "right")#, labels = c("C", "D"))
+Pre_Post_Fun.treatment.plot
+```
+
+#Create figure3
+
+```{r}
+figure_3 = ggarrange(Pre_Post_Fun.erle.plot, Pre_Post_Fun.treatment.plot, nrow = 2)
+figure_3
+```
+
+##Save figure 2
+
+```{r warning=FALSE}
+pdf("../Figures/Figure_3_Pre_Post.pdf", width = 12, height = 10 )
+figure_3
+dev.off()
 ```
 
 
-
 ```{r}
-figure3
+#figure3 <- ggarrange(fun.june.erle, fun.nov.erle, fun.june.boer, fun.nov.boer,
+#                    labels = c("A", "B","C","D"),
+#                    ncol = 2, nrow = 2)
 ```
 
 ```{r}
-figure3
-ggsave("Figure3.png",width=12,height=8,dpi = 400)
+#figure3
+```
+
+```{r}
+#figure3
+#ggsave("Figure3.png",width=12,height=8,dpi = 400)
 ```
 
 #Stats comparing phylum abundance between treatments - black grama November
