@@ -26,10 +26,10 @@ library(ggplot2)
 library(ggpubr)
 library(data.table)
 library(labdsv)
-otu = read.table(file="files/LGasv16SUN3.otu_table.txt", header=T, sep='\t',row.names = 1)
+otu = read.table(file="../Data/LGasv16SUN3.otu_table.txt", header=T, sep='\t',row.names = 1)
 head(otu)
 dim(otu)
-tax <- read.table(file="files/taxonomy.fix.16S.tsv", sep='\t', header=TRUE,row.names = 1)
+tax <- read.table(file="../Data/taxonomy.fix.16S.tsv", sep='\t', header=TRUE,row.names = 1)
 head(tax)
 dim(tax)
 tax <- select(tax,-Confidence)
@@ -41,7 +41,7 @@ otumat <- as(as.matrix(otu), "matrix")
 mode(otumat) <- "numeric"
 OTU = otu_table(otumat, taxa_are_rows = TRUE)
 otumat
-meta0 = read.table("files/Andrew16S_mappingfile.txt",
+meta0 = read.table("../Data/Andrew16S_mappingfile.txt",
                   header=TRUE,row.names=1,
                   sep="\t",stringsAsFactors=FALSE)
 head(meta0)
