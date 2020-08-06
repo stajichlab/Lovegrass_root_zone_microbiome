@@ -24,10 +24,10 @@ library(ggplot2)
 library(ggpubr)
 library(data.table)
 library(labdsv)
-otu = read.table(file="files/LGasv16SUN3.otu_table.txt", header=T, sep='\t',row.names = 1)
+otu = read.table(file="../Data/LGasv16SUN3.otu_table.txt", header=T, sep='\t',row.names = 1)
 head(otu)
 dim(otu)
-tax <- read.table(file="files/taxonomy.fix.16S.tsv", sep='\t', header=TRUE,row.names = 1)
+tax <- read.table(file="../Data/taxonomy.fix.16S.tsv", sep='\t', header=TRUE,row.names = 1)
 head(tax)
 dim(tax)
 tax <- select(tax,-Confidence)
@@ -39,7 +39,7 @@ otumat <- as(as.matrix(otu), "matrix")
 mode(otumat) <- "numeric"
 OTU = otu_table(otumat, taxa_are_rows = TRUE)
 otumat
-meta0 = read.table("files/Andrew16S_mappingfile.txt",
+meta0 = read.table("../Data/Andrew16S_mappingfile.txt",
                   header=TRUE,row.names=1,
                   sep="\t",stringsAsFactors=FALSE)
 head(meta0)
@@ -125,7 +125,9 @@ unique(data_glom.bac.june.erle2.top6$Phylum)
 
 ```{r}
 bac.june.erle <- ggplot(data_glom.bac.june.erle2.top6,aes(Treatment,Abundance,color=Phylum)) + geom_boxplot() +
-  scale_color_manual(values = c("salmon","darkorange2", "lightgreen", "gray26", "maroon", "steelblue3")) + labs(y= "Relative Abundance") + theme_bw(base_size = 20)
+  scale_color_manual(values = c("salmon","darkorange2", "lightgreen", "gray26", "maroon", "steelblue3")) + 
+  theme_bw(base_size = 20) + labs(y= "Relative Abundance", x = "") + 
+  ggtitle("A) ERLE Pre monsoon")
 ```
 
 ```{r}
@@ -226,12 +228,20 @@ unique(data_glom.bac.nov.erle2.top6$Phylum)
 
 ```{r}
 bac.nov.erle <- ggplot(data_glom.bac.nov.erle2.top6,aes(Treatment,Abundance,color=Phylum)) + geom_boxplot() +
-  scale_color_manual(values = c("salmon","darkorange2", "lightgreen", "gray26", "maroon", "steelblue3")) + labs(y= "Relative Abundance") + theme_bw(base_size = 20)
+  scale_color_manual(values = c("salmon","darkorange2", "lightgreen", "gray26", "maroon", "steelblue3")) + 
+  theme_bw(base_size = 20) + labs(y= "", x = "") + 
+  ggtitle("B) ERLE Post monsoon")
 ```
 
 ```{r}
 bac.nov.erle
 ```
+
+```{r}
+Pre_Post_Bac.treatment.plot = ggarrange(bac.june.erle, bac.nov.erle, ncol=2, common.legend = TRUE, legend = "right")#, labels = c("A", "B"))
+Pre_Post_Bac.treatment.plot
+```
+
 
 #Stats comparing phylum abundance between treatments - Lovegrass November
 
@@ -327,7 +337,10 @@ unique(data_glom.bac.june.boer2.top6$Phylum)
 
 ```{r}
 bac.june.boer <- ggplot(data_glom.bac.june.boer2.top6,aes(Treatment,Abundance,color=Phylum)) + geom_boxplot() +
-  scale_color_manual(values = c("salmon","darkorange2", "lightgreen", "gray26", "maroon", "steelblue3")) + labs(y= "Relative Abundance") + theme_bw(base_size = 20)
+  scale_color_manual(values = c("salmon","darkorange2", "lightgreen", "gray26", "maroon", "steelblue3")) + 
+  theme_bw(base_size = 20) + 
+  labs(y= "Relative Abundance", x = "") + 
+  ggtitle("C) BOER Pre monsoon")
 ```
 
 ```{r}
@@ -425,7 +438,9 @@ unique(data_glom.bac.nov.boer2.top6$Phylum)
 
 ```{r}
 bac.nov.boer <- ggplot(data_glom.bac.nov.boer2.top6,aes(Treatment,Abundance,color=Phylum)) + geom_boxplot() +
-  scale_color_manual(values = c("salmon","darkorange2", "lightgreen", "gray26", "hotpink2", "steelblue3")) + labs(y= "Relative Abundance") + theme_bw(base_size = 20)
+  scale_color_manual(values = c("salmon","darkorange2", "lightgreen", "gray26", "hotpink2", "steelblue3")) + theme_bw(base_size = 20) + 
+  labs(y= "", x = "") + 
+  ggtitle("D) BOER Pre monsoon")
 ```
 
 ```{r}
@@ -433,22 +448,41 @@ bac.nov.boer
 ```
 
 ```{r}
-figure2 <- ggarrange(bac.june.erle, bac.nov.erle, bac.june.boer, bac.nov.boer,
-                    labels = c("A", "B","C","D"),
-                    ncol = 2, nrow = 2)
+Pre_Post_Fun.treatment.plot = ggarrange(bac.june.boer, bac.nov.boer, ncol=2, common.legend = TRUE, legend = "right")#, labels = c("C", "D"))
+Pre_Post_Fun.treatment.plot
+```
+
+#Create figure2
+
+```{r}
+figure_2 = ggarrange(Pre_Post_Bac.treatment.plot, Pre_Post_Fun.treatment.plot, nrow = 2)
+figure_2
+```
+
+##Save figure 2
+
+```{r warning=FALSE}
+pdf("../Figures/Figure_2_Pre_Post.pdf", width = 12, height = 10 )
+figure_2
+dev.off()
 ```
 
 
+```{r}
+#figure2 <- ggarrange(bac.june.erle, bac.nov.erle, bac.june.boer, bac.nov.boer,
+#                    labels = c("A", "B","C","D"),
+#                    ncol = 2, nrow = 2)
+```
 
 ```{r}
-figure2
+#figure2
 ```
 
 ##Save figure 2
 
 ```{r}
-figure2
-ggsave("Figure2.png",width=12,height=7,dpi = 400)
+#figure2
+#ggsave("Figure2.png",width=12,height=7,dpi = 400)
 ```
 
 #Stats comparing phylum abundance between treatments - black grama June
