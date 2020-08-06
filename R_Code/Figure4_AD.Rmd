@@ -5,8 +5,8 @@ date: "7/23/2020"
 output: html_document
 ---
 
-```{r}
-setwd("~/Documents/Lovegrass_amptk.qiime2/figures/")
+```{r, setup, include=FALSE}
+knitr::opts_knit$set(root.dir = '~/Downloads/Lovegrass_root_zone_microbiome/')
 ```
 
 ```{r}
@@ -24,10 +24,10 @@ library(ggplot2)
 library(ggpubr)
 library(data.table)
 library(labdsv)
-otu = read.table(file="LGasv16SUN3.otu_table.txt", header=T, sep='\t',row.names = 1)
+otu = read.table(file="Data/LGasv16SUN3.otu_table.txt", header=T, sep='\t',row.names = 1)
 head(otu)
 dim(otu)
-tax <- read.table(file="taxonomy.fix.tsv", sep='\t', header=TRUE,row.names = 1)
+tax <- read.table(file="Data/taxonomy.fix.16S.tsv", sep='\t', header=TRUE,row.names = 1)
 head(tax)
 dim(tax)
 tax <- select(tax,-Confidence)
@@ -39,7 +39,7 @@ otumat <- as(as.matrix(otu), "matrix")
 mode(otumat) <- "numeric"
 OTU = otu_table(otumat, taxa_are_rows = TRUE)
 otumat
-meta0 = read.table("Andrew16S_mappingfile.txt",
+meta0 = read.table("Data/Andrew16S_mappingfile.txt",
                   header=TRUE,row.names=1,
                   sep="\t",stringsAsFactors=FALSE)
 head(meta0)
@@ -81,6 +81,59 @@ boxplot.bacteria <- plot_richness(bacteria.nov, x = "Treatment", color = "Grass"
 
 ```{r}
 boxplot.bacteria
+```
+
+##Bacterial stats
+
+```{r}
+alpha.bacteria.nov <- estimate_richness(bacteria.nov, measures = c("Observed", "Chao1","Simpson"))
+alpha.bacteria.nov2 <- cbind(sample_data(bacteria.nov), alpha.bacteria.nov)
+mod.10 <- aov(Observed ~ Treatment * Grass, alpha.bacteria.nov2)
+summary(mod.10)
+mod.11 <- aov(Chao1 ~ Treatment * Grass, alpha.bacteria.nov2)
+summary(mod.11)
+mod.12 <- aov(Simpson ~ Treatment * Grass, alpha.bacteria.nov2)
+summary(mod.12)
+```
+
+```{r}
+TukeyHSD(mod.10)
+```
+
+```{r}
+TukeyHSD(mod.11)
+```
+
+
+```{r}
+head(alpha.bacteria.nov2)
+```
+
+```{r}
+alpha.bacteria.nov2$Treatment <- as.factor(alpha.bacteria.nov2$Treatment)
+alpha.bacteria.nov2$Grass <- as.factor(alpha.bacteria.nov2$Grass)
+```
+
+```{r}
+alpha.bacteria.nov2.erle <- subset(alpha.bacteria.nov2,Grass == "ERLE")
+```
+
+```{r}
+kw.1 <- kruskal.test(Observed ~ Treatment,data = alpha.bacteria.nov2.erle)
+kw.1
+kw.2 <-kruskal.test(Chao1 ~ Treatment,data = alpha.bacteria.nov2.erle)
+kw.2
+```
+
+```{r}
+alpha.bacteria.nov2.boer <- subset(alpha.bacteria.nov2,Grass == "BOER")
+```
+
+```{r}
+kw.1 <- kruskal.test(Observed ~ Treatment,data = alpha.bacteria.nov2.boer)
+kw.1
+kw.2 <-kruskal.test(Chao1 ~ Treatment,data = alpha.bacteria.nov2.boer)
+kw.2
 ```
 
 ```{r}
@@ -152,11 +205,11 @@ fun.nov.boer <- subset_samples(fun.nov, Grass == "BOER")
 #Fungi
 
 ```{r}
-otu = read.table(file="~/Documents/Lovegrass_amptk.qiime2/ITS.ASV/FungiAD.otu_table.txt", header=T, sep='\t',row.names = 1)
+otu = read.table(file="Data/FungiAD.otu_table.txt", header=T, sep='\t',row.names = 1)
 head(otu)
 dim(otu)
 
-tax <- read.table(file="~/Documents/Lovegrass_amptk.qiime2/ITS.ASV/FungiAD.ASVs.taxonomy.fix.txt", sep='\t', header=TRUE,row.names = 1)
+tax <- read.table(file="Data/FungiAD.ASVs.taxonomy.fix.txt", sep='\t', header=TRUE,row.names = 1)
 head(tax)
 
 dim(tax)
@@ -172,7 +225,7 @@ OTU = otu_table(otumat, taxa_are_rows = TRUE)
 
 otumat
 
-meta0 = read.table("~/Documents/Lovegrass_amptk.qiime2/ITS.ASV/Andrew_ITS.mapping_file.txt",
+meta0 = read.table("Data/Andrew_ITS.mapping_file.txt",
                   header=TRUE,row.names=1,
                   sep="\t",stringsAsFactors=FALSE)
 meta0
@@ -241,4 +294,57 @@ figure4
 ```{r}
 figure4
 ggsave("Figure4.png",width=11,height=10,dpi = 400)
+```
+
+##Fungal stats
+
+```{r}
+alpha.fun.nov <- estimate_richness(fun.nov, measures = c("Observed", "Chao1","Simpson"))
+alpha.fun.nov2 <- cbind(sample_data(fun.nov), alpha.fun.nov)
+mod.10 <- aov(Observed ~ Treatment * Grass, alpha.fun.nov2)
+summary(mod.10)
+mod.11 <- aov(Chao1 ~ Treatment * Grass, alpha.fun.nov2)
+summary(mod.11)
+mod.12 <- aov(Simpson ~ Treatment * Grass, alpha.fun.nov2)
+summary(mod.12)
+```
+
+```{r}
+TukeyHSD(mod.10)
+```
+
+```{r}
+TukeyHSD(mod.11)
+```
+
+
+```{r}
+head(alpha.fun.nov2)
+```
+
+```{r}
+alpha.fun.nov2$Treatment <- as.factor(alpha.fun.nov2$Treatment)
+alpha.fun.nov2$Grass <- as.factor(alpha.fun.nov2$Grass)
+```
+
+```{r}
+alpha.fun.nov2.erle <- subset(alpha.fun.nov2,Grass == "ERLE")
+```
+
+```{r}
+kw.1 <- kruskal.test(Observed ~ Treatment,data = alpha.fun.nov2.erle)
+kw.1
+kw.2 <-kruskal.test(Chao1 ~ Treatment,data = alpha.fun.nov2.erle)
+kw.2
+```
+
+```{r}
+alpha.fun.nov2.boer <- subset(alpha.fun.nov2,Grass == "BOER")
+```
+
+```{r}
+kw.1 <- kruskal.test(Observed ~ Treatment,data = alpha.fun.nov2.boer)
+kw.1
+kw.2 <-kruskal.test(Chao1 ~ Treatment,data = alpha.fun.nov2.boer)
+kw.2
 ```
