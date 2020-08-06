@@ -11,11 +11,11 @@ setwd("~/Manuscript.Figures")
 
 
 ```{r}
-otu = read.table(file="files/FungiAD.otu_table.txt", header=T, sep='\t',row.names = 1)
+otu = read.table(file="../Data/FungiAD.otu_table.txt", header=T, sep='\t',row.names = 1)
 head(otu)
 dim(otu)
 
-tax <- read.table(file="files/FungiAD.ASVs.taxonomy.fix.txt", sep='\t', header=TRUE,row.names = 1)
+tax <- read.table(file="../Data/FungiAD.ASVs.taxonomy.fix.txt", sep='\t', header=TRUE,row.names = 1)
 head(tax)
 
 dim(tax)
@@ -31,7 +31,7 @@ OTU = otu_table(otumat, taxa_are_rows = TRUE)
 
 otumat
 
-meta0 = read.table("files/Andrew_ITS.mapping_file.txt",
+meta0 = read.table("../Data/Andrew_ITS.mapping_file.txt",
                   header=TRUE,row.names=1,
                   sep="\t",stringsAsFactors=FALSE)
 meta0
@@ -129,7 +129,9 @@ unique((data_glom.fun.june.erle2.top6$Class))
 
 ```{r}
 fun.june.erle <- ggplot(data_glom.fun.june.erle2.top6,aes(Treatment,Abundance,color=Class)) + geom_boxplot() +
-  scale_color_manual(values = c("indianred1", "lightsalmon","grey26","lightgreen", "lightblue1", "royalblue3")) + labs(y= "Relative Abundance") + theme_bw(base_size = 20) + theme(axis.text.x = element_text(angle = 90))
+  scale_color_manual(values = c("indianred1", "lightsalmon","grey26","lightgreen", "lightblue1", "royalblue3")) + 
+  theme_bw(base_size = 20) + labs(y= "Relative Abundance", x = "") + 
+  ggtitle("A) ERLE Pre monsoon") # + theme(axis.text.x = element_text(angle = 90))
 ```
 
 ```{r}
@@ -229,11 +231,18 @@ unique((data_glom.fun.nov.erle2.top6$Class))
 
 ```{r}
 fun.nov.erle <- ggplot(data_glom.fun.nov.erle2.top6,aes(Treatment,Abundance,color=Class)) + geom_boxplot() +
-  scale_color_manual(values = c("indianred1", "lightsalmon","gray26","lightgreen", "lightblue1", "royalblue3")) + labs(y= "Relative Abundance") + theme_bw(base_size = 20) + theme(axis.text.x = element_text(angle = 90))
+  scale_color_manual(values = c("indianred1", "lightsalmon","gray26","lightgreen", "lightblue1", "royalblue3")) + 
+  theme_bw(base_size = 20) + labs(y= "", x = "") + 
+  ggtitle("B) ERLE Post monsoon")
 ```
 
 ```{r}
 fun.nov.erle
+```
+
+```{r}
+Pre_Post_Fun.treatment.plot = ggarrange(fun.june.erle, fun.nov.erle, ncol=2, common.legend = TRUE, legend = "right")#, labels = c("A", "B"))
+Pre_Post_Fun.treatment.plot
 ```
 
 #Stats comparing phylum abundance between treatments - Lovegrass November
