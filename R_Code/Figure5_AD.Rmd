@@ -125,11 +125,11 @@ mod.15
 # Fungi
 
 ```{r}
-otu = read.table(file="files/FungiAD.otu_table.txt", header=T, sep='\t',row.names = 1)
+otu = read.table(file="../Data/FungiAD.otu_table.txt", header=T, sep='\t',row.names = 1)
 head(otu)
 dim(otu)
 
-tax <- read.table(file="files/FungiAD.ASVs.taxonomy.fix.txt", sep='\t', header=TRUE,row.names = 1)
+tax <- read.table(file="../Data/FungiAD.ASVs.taxonomy.fix.txt", sep='\t', header=TRUE,row.names = 1)
 head(tax)
 
 dim(tax)
@@ -145,7 +145,7 @@ OTU = otu_table(otumat, taxa_are_rows = TRUE)
 
 otumat
 
-meta0 = read.table("files/Andrew_ITS.mapping_file.txt",
+meta0 = read.table("../Data/Andrew_ITS.mapping_file.txt",
                   header=TRUE,row.names=1,
                   sep="\t",stringsAsFactors=FALSE)
 meta0
@@ -281,6 +281,28 @@ adonis(betad ~ Treatment * Grass, data = fun.treat.df.n, permutations = 1000)
 
 
 #Figure5
+
+```{r}
+bac.ord.plot = ggarrange(bac.ord.june, bac.ord.nov, ncol=2, common.legend = TRUE, legend = "right", labels = c("A", "B"))
+bac.ord.plot
+```
+
+```{r}
+fun.ord.plot = ggarrange(fun.ord.june, fun.ord.nov, ncol=2, common.legend = TRUE, legend = "right", labels = c("C", "D"))
+fun.ord.plot
+```
+
+```{r}
+figure_5 = ggarrange(bac.ord.plot, fun.ord.plot, nrow = 2)
+figure_5
+```
+
+```{r warning=FALSE}
+pdf("../Figures/Figure_5_ordination.pdf", width = 12, height = 10 )
+figure_5
+dev.off()
+```
+
 
 ```{r}
 figure5 <- ggarrange(bac.ord.june, bac.ord.nov, fun.ord.june, fun.ord.nov,
