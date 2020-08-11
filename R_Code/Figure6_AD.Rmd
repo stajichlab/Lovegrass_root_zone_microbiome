@@ -1,12 +1,12 @@
 ---
-title: "Figure 5"
+title: "Figure6_revised"
 author: "Andrew Dominguez"
-date: "7/23/2020"
+date: "8/10/2020"
 output: html_document
 ---
 
-```{r}
-setwd("~/Manuscript.Figures")
+```{r, setup, include=FALSE}
+knitr::opts_knit$set(root.dir = '~/Downloads/Lovegrass_root_zone_microbiome/')
 ```
 
 ```{r}
@@ -24,10 +24,10 @@ library(ggplot2)
 library(ggpubr)
 library(data.table)
 library(labdsv)
-otu = read.table(file="files/LGasv16SUN3.otu_table.txt", header=T, sep='\t',row.names = 1)
+otu = read.table(file="Data/LGasv16SUN3.otu_table.txt", header=T, sep='\t',row.names = 1)
 head(otu)
 dim(otu)
-tax <- read.table(file="files/taxonomy.fix.16S.tsv", sep='\t', header=TRUE,row.names = 1)
+tax <- read.table(file="Data/taxonomy.fix.16S.tsv", sep='\t', header=TRUE,row.names = 1)
 head(tax)
 dim(tax)
 tax <- select(tax,-Confidence)
@@ -39,7 +39,7 @@ otumat <- as(as.matrix(otu), "matrix")
 mode(otumat) <- "numeric"
 OTU = otu_table(otumat, taxa_are_rows = TRUE)
 otumat
-meta0 = read.table("files/Andrew16S_mappingfile.txt",
+meta0 = read.table("Data/Andrew16S_mappingfile.txt",
                   header=TRUE,row.names=1,
                   sep="\t",stringsAsFactors=FALSE)
 head(meta0)
@@ -107,38 +107,38 @@ as.numeric(bac.june.grass$Grass)
 ```
 
 ```{r}
-grass.ind.j <- indval(bac.june.OTU2,bac.june.grass$Grass)
+bac.grass.ind.j <- indval(bac.june.OTU2,bac.june.grass$Grass)
 ```
 
 ```{r}
-head(grass.ind.j)
+head(bac.grass.ind.j)
 ```
 
 ###Create table with indicator species with p value of less than 0.05
 
 ```{r}
-gr.june <- grass.ind.j$maxcls[grass.ind.j$pval <= 0.05]
-iv.june <- grass.ind.j$indcls[grass.ind.j$pval <= 0.05]
-pv.june <- grass.ind.j$pval[grass.ind.j$pval <= 0.05]
+gr.june <- bac.grass.ind.j$maxcls[bac.grass.ind.j$pval <= 0.05]
+iv.june <- bac.grass.ind.j$indcls[bac.grass.ind.j$pval <= 0.05]
+pv.june <- bac.grass.ind.j$pval[bac.grass.ind.j$pval <= 0.05]
 ```
 
 ```{r}
-grass.ind.table.j <- data.frame(Grass=gr.june,indval=iv.june,pvalue=pv.june)
-grass.ind.table.j <- grass.ind.table.j[order(grass.ind.table.j$Grass, -grass.ind.table.j$indval),]
+bac.grass.ind.table.j <- data.frame(Grass=gr.june,indval=iv.june,pvalue=pv.june)
+bac.grass.ind.table.j <- bac.grass.ind.table.j[order(bac.grass.ind.table.j$Grass, -bac.grass.ind.table.j$indval),]
 ```
 
 
 ###Change Grass from numbers to names
 
 ```{r}
-grass.ind.table.j$Grass <- gsub("1","BOER", grass.ind.table.j$Grass)
-grass.ind.table.j$Grass <- gsub("2","ERLE", grass.ind.table.j$Grass)
+bac.grass.ind.table.j$Grass <- gsub("1","BOER", bac.grass.ind.table.j$Grass)
+bac.grass.ind.table.j$Grass <- gsub("2","ERLE", bac.grass.ind.table.j$Grass)
 ```
 
-###Remove indicator species with an indicator value less than 0.75
+###Remove indicator species with an indicator value less than 0.9
 
 ```{r}
-grass.ind.table.j2 <- subset(grass.ind.table.j,indval >= 0.75)
+bac.grass.ind.table.j2 <- subset(bac.grass.ind.table.j,indval >= 0.9)
 ```
 
 
@@ -155,89 +155,82 @@ head(bac.june.OTU3)
 ###Add otu table to indicator species table
 
 ```{r}
-indic.otu.grass.j = bac.june.OTU3[row.names(bac.june.OTU3) %in% row.names(grass.ind.table.j2),]
-indic.otumat.grass.j <- as(as.matrix(indic.otu.grass.j), "matrix")
-grass.indic.OTU.j = otu_table(indic.otumat.grass.j, taxa_are_rows = TRUE)
+bac.indic.otu.grass.j = bac.june.OTU3[row.names(bac.june.OTU3) %in% row.names(bac.grass.ind.table.j2),]
+bac.indic.otumat.grass.j <- as(as.matrix(bac.indic.otu.grass.j), "matrix")
+bac.grass.indic.OTU.j = otu_table(bac.indic.otumat.grass.j, taxa_are_rows = TRUE)
 ```
 
 ```{r}
-physeq.grass.june <- phyloseq(grass.indic.OTU.j,TAX,sampleData)
-physeq.grass.june
+bac.physeq.grass.june <- phyloseq(bac.grass.indic.OTU.j,TAX,sampleData)
+bac.physeq.grass.june
 ```
 
 ```{r}
-tax.grass.june <- as(tax_table(physeq.grass.june),"matrix")
+bac.tax.grass.june <- as(tax_table(bac.physeq.grass.june),"matrix")
 ```
 
 ```{r}
-tax.grass.june[is.na(tax.grass.june)] <- "Unknown"
-head(tax.grass.june)
+bac.tax.grass.june[is.na(bac.tax.grass.june)] <- "Unknown"
+head(bac.tax.grass.june)
 ```
 
 ```{r}
-tax.grass.june <- tax_table(tax.grass.june)
+bac.tax.grass.june <- tax_table(bac.tax.grass.june)
 ```
 
 ```{r}
-physeq.grass.june2 <- phyloseq(otu_table(physeq.grass.june),tax.grass.june,sample_data(physeq.grass.june))
+bac.physeq.grass.june2 <- phyloseq(otu_table(bac.physeq.grass.june),bac.tax.grass.june,sample_data(bac.physeq.grass.june))
 ```
 
 
 ##Get the average abundance of each indicator for each grass
 
 ```{r}
-avg.june.con <- merge_samples(physeq.grass.june2, "Grass")
-sample_data(avg.june.con)$Grass <- factor(sample_names(avg.june.con))
-avg.june.con2 = transform_sample_counts(avg.june.con, 
-                                                      function(x) x / sum(x))
+bac.avg.june.con <- merge_samples(bac.physeq.grass.june2, "Grass")
+sample_data(bac.avg.june.con)$Grass <- factor(sample_names(bac.avg.june.con))
 ```
 
 ```{r}
-avg.june.con
+bac.avg.june.con
 ```
 
 ```{r}
-avg.june.OTU <- as(otu_table(avg.june.con),"matrix")
-head(avg.june.OTU)
+bac.avg.june.OTU <- as(otu_table(bac.avg.june.con),"matrix")
+head(bac.avg.june.OTU)
 ```
 
 ```{r}
-avg.june.TAX <- as(tax_table(avg.june.con),"matrix")
-head(avg.june.TAX)
+bac.avg.june.TAX <- as(tax_table(bac.avg.june.con),"matrix")
+head(bac.avg.june.TAX)
 ```
 
 ```{r}
-avg.june.Sample <- as(sample_data(avg.june.con),"matrix")
-head(avg.june.Sample)
+bac.avg.june.Sample <- as(sample_data(bac.avg.june.con),"matrix")
+head(bac.avg.june.Sample)
 ```
 
-##Add new column to sample data
+##Edit column in sample data
 
 ```{r}
-setwd("~/Downloads")
-write.csv(avg.june.Sample,"control.june.avg.csv")
+bac.avg.june.Sample <- gsub("BOER", "BOER.June", bac.avg.june.Sample)
+bac.avg.june.Sample <- gsub("ERLE", "ERLE.June", bac.avg.june.Sample)
 ```
 
-####Edit CSV with new column - Grass.season
-
 ```{r}
-setwd("~/Downloads")
-avg.june.Sample.edit <- read.csv("control.june.avg.csv",header = TRUE, row.names = 1,stringsAsFactors = TRUE)
-head(avg.june.Sample.edit)
+bac.avg.june.Sample <- data.frame(bac.avg.june.Sample)
 ```
 
 
 ```{r}
-avg.june.Sample.edit <- sample_data(avg.june.Sample.edit)
+bac.avg.june.Sample.edit <- sample_data(bac.avg.june.Sample)
 ```
 
 ###Create new phylsoeq object with edited sample data
 
 ```{r}
-avg.June.indicators <- phyloseq(tax_table(avg.june.con), otu_table(avg.june.con), avg.june.Sample.edit)
-avg.June.indicators
+bac.avg.June.indicators <- phyloseq(tax_table(bac.avg.june.con), otu_table(bac.avg.june.con), bac.avg.june.Sample.edit)
+bac.avg.June.indicators
 ```
-
 
 
 
@@ -281,42 +274,40 @@ as.numeric(bac.nov.grass$Grass)
 ```
 
 ```{r}
-grass.ind <- indval(bac.nov.OTU2,bac.nov.grass$Grass)
+bac.grass.ind <- indval(bac.nov.OTU2,bac.nov.grass$Grass)
 ```
 
 ```{r}
-head(grass.ind)
+head(bac.grass.ind)
 ```
 
 ###Create table with indicator species with p value of less than 0.05
 
 ```{r}
-gr.nov <- grass.ind$maxcls[grass.ind$pval <= 0.05]
-iv.nov <- grass.ind$indcls[grass.ind$pval <= 0.05]
-pv.nov <- grass.ind$pval[grass.ind$pval <= 0.05]
+gr.nov <- bac.grass.ind$maxcls[bac.grass.ind$pval <= 0.05]
+iv.nov <- bac.grass.ind$indcls[bac.grass.ind$pval <= 0.05]
+pv.nov <- bac.grass.ind$pval[bac.grass.ind$pval <= 0.05]
 ```
 
 ```{r}
-grass.ind.table <- data.frame(Grass=gr.nov,indval=iv.nov,pvalue=pv.nov)
-grass.ind.table <- grass.ind.table[order(grass.ind.table$Grass, -grass.ind.table$indval),]
+bac.grass.ind.table <- data.frame(Grass=gr.nov,indval=iv.nov,pvalue=pv.nov)
+bac.grass.ind.table <- bac.grass.ind.table[order(bac.grass.ind.table$Grass, -bac.grass.ind.table$indval),]
 ```
 
-```{r}
-View(grass.ind.table)
-```
+
 
 
 ###Change Grass from numbers to names
 
 ```{r}
-grass.ind.table$Grass <- gsub("1","BOER", grass.ind.table$Grass)
-grass.ind.table$Grass <- gsub("2","ERLE", grass.ind.table$Grass)
+bac.grass.ind.table$Grass <- gsub("1","BOER", bac.grass.ind.table$Grass)
+bac.grass.ind.table$Grass <- gsub("2","ERLE", bac.grass.ind.table$Grass)
 ```
 
-###Remove indicator species with an indicator value less than 0.75
+###Remove indicator species with an indicator value less than 0.9
 
 ```{r}
-grass.ind.table2 <- subset(grass.ind.table,indval >= 0.75)
+bac.grass.ind.table2 <- subset(bac.grass.ind.table,indval >= 0.9)
 ```
 
 
@@ -333,88 +324,86 @@ head(bac.nov.OTU3)
 ###Add otu table to indicator species table
 
 ```{r}
-indic.otu.grass = bac.nov.OTU3[row.names(bac.nov.OTU3) %in% row.names(grass.ind.table2),]
-indic.otumat.grass <- as(as.matrix(indic.otu.grass), "matrix")
-grass.indic.OTU = otu_table(indic.otumat.grass, taxa_are_rows = TRUE)
+bac.indic.otu.grass = bac.nov.OTU3[row.names(bac.nov.OTU3) %in% row.names(bac.grass.ind.table2),]
+bac.indic.otumat.grass <- as(as.matrix(bac.indic.otu.grass), "matrix")
+bac.grass.indic.OTU = otu_table(bac.indic.otumat.grass, taxa_are_rows = TRUE)
 ```
 
-```{r}
-physeq.grass.nov <- phyloseq(grass.indic.OTU,TAX,sampleData)
-physeq.grass.nov
-```
+
 
 
 ```{r}
-tax.grass.nov <- as(tax_table(physeq.grass.nov),"matrix")
+bac.physeq.grass.nov <- phyloseq(bac.grass.indic.OTU,TAX,sampleData)
+bac.physeq.grass.nov
+```
+
+
+```{r}
+bac.tax.grass.nov <- as(tax_table(bac.physeq.grass.nov),"matrix")
 ```
 
 ```{r}
-tax.grass.nov[is.na(tax.grass.nov)] <- "Unknown"
-head(tax.grass.nov)
+bac.tax.grass.nov[is.na(bac.tax.grass.nov)] <- "Unknown"
+head(bac.tax.grass.nov)
 ```
 
 ```{r}
-tax.grass.nov <- tax_table(tax.grass.nov)
+bac.tax.grass.nov <- tax_table(bac.tax.grass.nov)
 ```
 
 ```{r}
-physeq.grass.nov2 <- phyloseq(otu_table(physeq.grass.nov),tax.grass.nov,sample_data(physeq.grass.nov))
+bac.physeq.grass.nov2 <- phyloseq(otu_table(bac.physeq.grass.nov),bac.tax.grass.nov,sample_data(bac.physeq.grass.nov))
 ```
+
 
 
 ##Get the average abundance of each indicator for each grass - November
 
 ```{r}
-avg.nov.con <- merge_samples(physeq.grass.nov2, "Grass")
-sample_data(avg.nov.con)$Grass <- factor(sample_names(avg.nov.con))
-avg.nov.con2 = transform_sample_counts(avg.nov.con, 
-                                                      function(x) x / sum(x))
+bac.avg.nov.con <- merge_samples(bac.physeq.grass.nov2, "Grass")
+sample_data(bac.avg.nov.con)$Grass <- factor(sample_names(bac.avg.nov.con))
 ```
 
 ```{r}
-avg.nov.con
+bac.avg.nov.con
 ```
 
 ```{r}
-avg.nov.OTU <- as(otu_table(avg.nov.con),"matrix")
-head(avg.nov.OTU)
+bac.avg.nov.OTU <- as(otu_table(bac.avg.nov.con),"matrix")
+head(bac.avg.nov.OTU)
 ```
 
 ```{r}
-avg.nov.TAX <- as(tax_table(avg.nov.con),"matrix")
-head(avg.nov.TAX)
+bac.avg.nov.TAX <- as(tax_table(bac.avg.nov.con),"matrix")
+head(bac.avg.nov.TAX)
 ```
 
 ```{r}
-avg.nov.Sample <- as(sample_data(avg.nov.con),"matrix")
-head(avg.nov.Sample)
+bac.avg.nov.Sample <- as(sample_data(bac.avg.nov.con),"matrix")
+head(bac.avg.nov.Sample)
 ```
 
-##Add new column to sample data
+##Edit column in sample data
 
 ```{r}
-setwd("~/Downloads")
-write.csv(avg.nov.Sample,"control.nov.avg.csv")
+bac.avg.nov.Sample <- gsub("BOER", "BOER.Nov", bac.avg.nov.Sample)
+bac.avg.nov.Sample <- gsub("ERLE", "ERLE.Nov", bac.avg.nov.Sample)
 ```
 
-####Edit CSV with new column - Grass.season
-
 ```{r}
-setwd("~/Downloads")
-avg.nov.Sample.edit <- read.csv("control.nov.avg.csv",header = TRUE, row.names = 1,stringsAsFactors = TRUE)
-head(avg.nov.Sample.edit)
+bac.avg.nov.Sample <- data.frame(bac.avg.nov.Sample)
 ```
 
 
 ```{r}
-avg.nov.Sample.edit <- sample_data(avg.nov.Sample.edit)
+bac.avg.nov.Sample.edit <- sample_data(bac.avg.nov.Sample)
 ```
 
 ###Create new phylsoeq object with edited sample data
 
 ```{r}
-avg.nov.indicators <- phyloseq(tax_table(avg.nov.con), otu_table(avg.nov.con), avg.nov.Sample.edit)
-avg.nov.indicators
+bac.avg.nov.indicators <- phyloseq(tax_table(bac.avg.nov.con), otu_table(bac.avg.nov.con), bac.avg.nov.Sample.edit)
+bac.avg.nov.indicators
 ```
 
 
@@ -423,120 +412,141 @@ avg.nov.indicators
 
 
 ```{r}
-avg.June.indicators
+bac.avg.June.indicators
 ```
 
 ```{r}
-avg.June.indicators.otu <- as(otu_table(avg.June.indicators),"matrix")
-avg.June.indicators.otu
+bac.avg.June.indicators.otu <- as(otu_table(bac.avg.June.indicators),"matrix")
+bac.avg.June.indicators.otu
 ```
 
 ```{r}
-rownames(avg.June.indicators.otu) <- c("BOER.June","ERLE.June")
-avg.June.indicators.otu
+rownames(bac.avg.June.indicators.otu) <- c("BOER.June","ERLE.June")
+bac.avg.June.indicators.otu
 ```
 
 ```{r}
-avg.June.indicators.otu.2 <- t(avg.June.indicators.otu)
+bac.avg.June.indicators.otu.2 <- t(bac.avg.June.indicators.otu)
 ```
 
 ```{r}
-avg.June.indicators.otu.3 <- otu_table(avg.June.indicators.otu.2,taxa_are_rows = TRUE)
-```
-
-
-
-```{r}
-avg.June.indicators.sample <- as(sample_data(avg.June.indicators),"matrix")
-avg.June.indicators.sample
-```
-
-```{r}
-rownames(avg.June.indicators.sample) <- c("BOER.June","ERLE.June")
-avg.June.indicators.sample
-```
-
-```{r}
-avg.June.indicators.sample <- data.frame(avg.June.indicators.sample)
-```
-
-
-```{r}
-avg.June.indicators.Sample <- sample_data(avg.June.indicators.sample)
-head(avg.June.indicators.Sample)
+bac.avg.June.indicators.otu.3 <- otu_table(bac.avg.June.indicators.otu.2,taxa_are_rows = TRUE)
 ```
 
 
 
 ```{r}
-avg.June.indicators2 <- phyloseq(avg.June.indicators.otu.3,avg.June.indicators.Sample,tax_table(avg.June.indicators))
-avg.June.indicators2
+bac.avg.June.indicators.sample <- as(sample_data(bac.avg.June.indicators),"matrix")
+bac.avg.June.indicators.sample
+```
+
+```{r}
+rownames(bac.avg.June.indicators.sample) <- c("BOER.June","ERLE.June")
+bac.avg.June.indicators.sample
+```
+
+```{r}
+bac.avg.June.indicators.sample <- data.frame(bac.avg.June.indicators.sample)
+```
+
+
+```{r}
+bac.avg.June.indicators.Sample <- sample_data(bac.avg.June.indicators.sample)
+head(bac.avg.June.indicators.Sample)
+```
+
+
+
+```{r}
+bac.avg.June.indicators2 <- phyloseq(bac.avg.June.indicators.otu.3,bac.avg.June.indicators.Sample,tax_table(bac.avg.June.indicators))
+bac.avg.June.indicators2
 ```
 
 
 
 
 ```{r}
-avg.nov.indicators.otu <- as(otu_table(avg.nov.indicators),"matrix")
-avg.nov.indicators.otu
+bac.avg.nov.indicators.otu <- as(otu_table(bac.avg.nov.indicators),"matrix")
+bac.avg.nov.indicators.otu
 ```
 
 ```{r}
-rownames(avg.nov.indicators.otu) <- c("BOER.Nov","ERLE.Nov")
-avg.nov.indicators.otu
+rownames(bac.avg.nov.indicators.otu) <- c("BOER.Nov","ERLE.Nov")
+bac.avg.nov.indicators.otu
 ```
 
 ```{r}
-avg.nov.indicators.otu.2 <- t(avg.nov.indicators.otu)
+bac.avg.nov.indicators.otu.2 <- t(bac.avg.nov.indicators.otu)
 ```
 
 ```{r}
-avg.nov.indicators.otu.3 <- otu_table(avg.nov.indicators.otu.2,taxa_are_rows = TRUE)
-```
-
-
-
-```{r}
-avg.nov.indicators.sample <- as(sample_data(avg.nov.indicators),"matrix")
-avg.nov.indicators.sample
-```
-
-```{r}
-rownames(avg.nov.indicators.sample) <- c("BOER.Nov","ERLE.Nov")
-avg.nov.indicators.sample
-```
-
-```{r}
-avg.nov.indicators.sample <- data.frame(avg.nov.indicators.sample)
-```
-
-
-```{r}
-avg.nov.indicators.Sample <- sample_data(avg.nov.indicators.sample)
-head(avg.nov.indicators.Sample)
+bac.avg.nov.indicators.otu.3 <- otu_table(bac.avg.nov.indicators.otu.2,taxa_are_rows = TRUE)
 ```
 
 
 
 ```{r}
-avg.nov.indicators2 <- phyloseq(avg.nov.indicators.otu.3,avg.nov.indicators.Sample,tax_table(avg.nov.indicators))
-avg.nov.indicators2
+bac.avg.nov.indicators.sample <- as(sample_data(bac.avg.nov.indicators),"matrix")
+bac.avg.nov.indicators.sample
 ```
 
 ```{r}
-avg.control.indic <- merge_phyloseq(avg.June.indicators2,avg.nov.indicators2)
-avg.control.indic
+rownames(bac.avg.nov.indicators.sample) <- c("BOER.Nov","ERLE.Nov")
+bac.avg.nov.indicators.sample
+```
+
+```{r}
+bac.avg.nov.indicators.sample <- data.frame(bac.avg.nov.indicators.sample)
+```
+
+
+```{r}
+bac.avg.nov.indicators.Sample <- sample_data(bac.avg.nov.indicators.sample)
+head(bac.avg.nov.indicators.Sample)
+```
+
+
+
+```{r}
+bac.avg.nov.indicators2 <- phyloseq(bac.avg.nov.indicators.otu.3,bac.avg.nov.indicators.Sample,tax_table(bac.avg.nov.indicators))
+bac.avg.nov.indicators2
+```
+
+```{r}
+bac.avg.control.indic <- merge_phyloseq(bac.avg.June.indicators2,bac.avg.nov.indicators2)
+bac.avg.control.indic
 ```
 
 
 ##Prune taxa
 
 ```{r}
-avg.control.indic.20 <- prune_taxa(names(sort(taxa_sums(avg.control.indic),TRUE)[1:20]), avg.control.indic)
+bac.avg.control.indic.25 <- prune_taxa(names(sort(taxa_sums(bac.avg.control.indic),TRUE)[1:25]), bac.avg.control.indic)
 ```
 
 ```{r}
-heatmap.con.bac <- plot_heatmap(avg.control.indic.20, sample.label="Grass.Season",low = "lightyellow2", na.value = "white", high = "steelblue4", sample.order = "Grass.Season", taxa.label = "Phylum") + theme_bw(base_size = 20)
+sample.25 <- as(sample_data(bac.avg.control.indic.25),"data.frame")
+```
+
+```{r}
+sample.25$Grass <- factor(sample.25$Grass, levels = c("BOER.June", "ERLE.June", "BOER.Nov", "ERLE.Nov"))
+```
+
+```{r}
+sample.25 <- sample_data(sample.25)
+```
+
+```{r}
+bac.avg.control.indic.25.ordered <- phyloseq(tax_table(bac.avg.control.indic.25), otu_table(bac.avg.control.indic.25),sample.25)
+```
+
+
+
+
+
+
+```{r}
+heatmap.con.bac <- plot_heatmap(bac.avg.control.indic.25.ordered, sample.label="Grass",low = "lightyellow2", na.value = "white", high = "steelblue4", sample.order = sample_names(bac.avg.control.indic.25.ordered)) + theme_bw(base_size = 20) + ylab("ASV")
 ```
 
 ```{r}
@@ -547,11 +557,11 @@ heatmap.con.bac
 #Fungi
 
 ```{r}
-otu = read.table(file="files/FungiAD.otu_table.txt", header=T, sep='\t',row.names = 1)
+otu = read.table(file="Data/FungiAD.otu_table.txt", header=T, sep='\t',row.names = 1)
 head(otu)
 dim(otu)
 
-tax <- read.table(file="files/FungiAD.ASVs.taxonomy.fix.txt", sep='\t', header=TRUE,row.names = 1)
+tax <- read.table(file="Data/FungiAD.ASVs.taxonomy.fix.txt", sep='\t', header=TRUE,row.names = 1)
 head(tax)
 
 dim(tax)
@@ -567,7 +577,7 @@ OTU = otu_table(otumat, taxa_are_rows = TRUE)
 
 otumat
 
-meta0 = read.table("files/Andrew_ITS.mapping_file.txt",
+meta0 = read.table("Data/Andrew_ITS.mapping_file.txt",
                   header=TRUE,row.names=1,
                   sep="\t",stringsAsFactors=FALSE)
 meta0
@@ -680,10 +690,10 @@ grass.fun.ind.table.j$Grass <- gsub("1","BOER", grass.fun.ind.table.j$Grass)
 grass.fun.ind.table.j$Grass <- gsub("2","ERLE", grass.fun.ind.table.j$Grass)
 ```
 
-###Remove indicator species with an indicator value less than 0.75
+###Remove indicator species with an indicator value less than 0.8
 
 ```{r}
-grass.fun.ind.table.j2 <- subset(grass.fun.ind.table.j,indval >= 0.75)
+grass.fun.ind.table.j2 <- subset(grass.fun.ind.table.j,indval >= 0.8)
 ```
 
 ##Transpose indicator species OTU table to format for phyloseq object
@@ -815,7 +825,7 @@ grass.ind.table.fun$Grass <- gsub("2","ERLE", grass.ind.table.fun$Grass)
 ```
 
 ```{r}
-grass.ind.table.fun2 <- subset(grass.ind.table.fun,indval >= 0.75)
+grass.ind.table.fun2 <- subset(grass.ind.table.fun,indval >= 0.8)
 ```
 
 ###Add otu table to indicator species table
@@ -862,8 +872,6 @@ Finding average abundance of indicators
 ```{r}
 avg.june.con <- merge_samples(physeq.fun.grass.june2, "Grass")
 sample_data(avg.june.con)$Grass <- factor(sample_names(avg.june.con))
-avg.june.con2 = transform_sample_counts(avg.june.con, 
-                                                      function(x) x / sum(x))
 ```
 
 ```{r}
@@ -885,24 +893,20 @@ avg.june.Sample <- as(sample_data(avg.june.con),"matrix")
 head(avg.june.Sample)
 ```
 
-##Add new column to sample data
+##Edit column in sample data
 
 ```{r}
-setwd("~/Downloads")
-write.csv(avg.june.Sample,"control.june.avg.fun.csv")
+avg.june.Sample <- gsub("BOER", "BOER.June", avg.june.Sample)
+avg.june.Sample <- gsub("ERLE", "ERLE.June", avg.june.Sample)
 ```
 
-####Edit CSV with new column - Grass.season
-
 ```{r}
-setwd("~/Downloads")
-avg.june.Sample.edit <- read.csv("control.june.avg.fun.csv",header = TRUE, row.names = 1,stringsAsFactors = TRUE)
-head(avg.june.Sample.edit)
+avg.june.Sample <- data.frame(avg.june.Sample)
 ```
 
 
 ```{r}
-avg.june.Sample.edit <- sample_data(avg.june.Sample.edit)
+avg.june.Sample.edit <- sample_data(avg.june.Sample)
 ```
 
 ###Create new phylsoeq object with edited sample data
@@ -917,8 +921,6 @@ avg.June.indicators
 ```{r}
 avg.nov.con <- merge_samples(physeq.fun.indic2, "Grass")
 sample_data(avg.nov.con)$Grass <- factor(sample_names(avg.nov.con))
-avg.nov.con2 = transform_sample_counts(avg.nov.con, 
-                                                      function(x) x / sum(x))
 ```
 
 ```{r}
@@ -940,24 +942,20 @@ avg.nov.Sample <- as(sample_data(avg.nov.con),"matrix")
 head(avg.nov.Sample)
 ```
 
-##Add new column to sample data
+##Edit column in sample data
 
 ```{r}
-setwd("~/Downloads")
-write.csv(avg.nov.Sample,"control.nov.avg.fun2.csv")
+avg.nov.Sample <- gsub("BOER", "BOER.Nov", avg.nov.Sample)
+avg.nov.Sample <- gsub("ERLE", "ERLE.Nov", avg.nov.Sample)
 ```
 
-####Edit CSV with new column - Grass.season
-
 ```{r}
-setwd("~/Downloads")
-avg.nov.Sample.edit <- read.csv("control.nov.avg.fun2.csv",header = TRUE, row.names = 1,stringsAsFactors = TRUE)
-head(avg.nov.Sample.edit)
+avg.nov.Sample <- data.frame(avg.nov.Sample)
 ```
 
 
 ```{r}
-avg.nov.Sample.edit <- sample_data(avg.nov.Sample.edit)
+avg.nov.Sample.edit <- sample_data(avg.nov.Sample)
 ```
 
 ###Create new phylsoeq object with edited sample data
@@ -1079,7 +1077,24 @@ avg.control.indic
 ```
 
 ```{r}
-heatmap.fun.control <- plot_heatmap(avg.control.indic, sample.label="Grass",low = "lightyellow2", na.value = "white", high = "steelblue4", sample.order = "Grass", taxa.label = "Phylum") + theme_bw(base_size = 20)
+sample.fun <- as(sample_data(avg.control.indic),"data.frame")
+```
+
+```{r}
+sample.fun$Grass <- factor(sample.fun$Grass, levels = c("BOER.June", "ERLE.June", "BOER.Nov", "ERLE.Nov"))
+```
+
+```{r}
+sample.fun <- sample_data(sample.fun)
+```
+
+```{r}
+avg.control.indic.ordered <- phyloseq(tax_table(avg.control.indic), otu_table(avg.control.indic),sample.fun)
+```
+
+
+```{r}
+heatmap.fun.control <- plot_heatmap(avg.control.indic.ordered, sample.label="Grass",low = "lightyellow2", na.value = "white", high = "steelblue4", sample.order = sample_names(avg.control.indic.ordered)) + theme_bw(base_size = 20) + ylab("ASV")
 ```
 
 ```{r}
@@ -1102,7 +1117,8 @@ figure6
 
 
 ```{r}
+setwd("~/Documents/Lovegrass_amptk.qiime2/Manuscript.Figures/")
 figure6
-ggsave("Figure.png",width=12,height=10,dpi = 400)
+ggsave("Figure6.png",width=12,height=10.5,dpi = 400)
 ```
 
