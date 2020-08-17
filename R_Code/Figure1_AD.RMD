@@ -532,7 +532,7 @@ unique((data_glom.fun.june2.top6$Class))
 
 ```{r}
 fun.june.con.plot <- ggplot(data_glom.fun.june2.top6,aes(Grass,Abundance,color=Class)) + geom_boxplot() +
-  scale_color_manual(values = c("indianred1", "lightsalmon","khaki1","lightgreen", "lightblue1", "royalblue3")) + theme_bw(base_size = 20) + 
+  scale_color_manual(values = c("indianred1", "lightsalmon","brown","lightgreen", "lightblue1", "royalblue3")) + theme_bw(base_size = 20) + 
   labs(y= "Relative Abundance", x = "") + 
   ggtitle("C) Pre monsoon")
 ```
@@ -595,7 +595,7 @@ unique((data_glom.fun.nov2.top6$Class))
 
 ```{r}
 fun.nov.con.plot <- ggplot(data_glom.fun.nov2.top6,aes(Grass,Abundance,color=Class)) + geom_boxplot() +
-  scale_color_manual(values = c("indianred1", "lightsalmon","khaki1","grey26", "lightblue1", "royalblue3")) + theme_bw(base_size = 20) + labs(y= "", x = "") + 
+  scale_color_manual(values = c("indianred1", "lightsalmon","brown","grey26", "lightblue1", "royalblue3")) + theme_bw(base_size = 20) + labs(y= "", x = "") + 
   ggtitle("D) Post monsoon")
 ```
 
@@ -605,7 +605,7 @@ fun.nov.con.plot
 
 
 ```{r}
-Pre_Post_Fun.plot = ggarrange(fun.june.con.plot, fun.nov.con.plot, ncol=2, common.legend = TRUE, legend = "right")#, labels = c("C", "D"))
+Pre_Post_Fun.plot = ggarrange(fun.june.con.plot, fun.nov.con.plot, ncol=2, common.legend = T, legend = "right")#, labels = c("C", "D"))
 Pre_Post_Fun.plot
 ```
 
@@ -620,7 +620,7 @@ figure_1
 ##Save figure 1
 
 ```{r warning=FALSE}
-pdf("../Figures/Figure_1_Pre_Post.pdf", width = 12, height = 10 )
+pdf("../Figures/Figure_1_Pre_Post_no_yellow.pdf", width = 12, height = 10 )
 figure_1
 dev.off()
 ```
