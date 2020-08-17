@@ -160,6 +160,13 @@ bac.june.con.plot <- ggplot(data_glom.bac.june2.top6,aes(Grass,Abundance,color=P
 ```
 
 ```{r}
+bac.june.con.plot <- ggplot(data_glom.bac.june2.top6,aes(Grass,Abundance,fill=Phylum)) + geom_boxplot() +
+  scale_fill_manual(values = c("salmon","darkorange2", "lightgreen", "gray26", "maroon", "steelblue3")) + theme_bw(base_size = 20) + 
+  labs(y= "Relative Abundance", x = "") + 
+  ggtitle("A) Pre monsoon")
+```
+
+```{r}
 bac.june.con.plot
 ```
 
