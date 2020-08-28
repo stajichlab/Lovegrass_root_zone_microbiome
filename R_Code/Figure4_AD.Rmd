@@ -24,10 +24,10 @@ library(ggplot2)
 library(ggpubr)
 library(data.table)
 library(labdsv)
-otu = read.table(file="Data/LGasv16SUN3.otu_table.txt", header=T, sep='\t',row.names = 1)
+otu = read.table(file="../Data/LGasv16SUN3.otu_table.txt", header=T, sep='\t',row.names = 1)
 head(otu)
 dim(otu)
-tax <- read.table(file="Data/taxonomy.fix.16S.tsv", sep='\t', header=TRUE,row.names = 1)
+tax <- read.table(file="../Data/taxonomy.fix.16S.tsv", sep='\t', header=TRUE,row.names = 1)
 head(tax)
 dim(tax)
 tax <- select(tax,-Confidence)
@@ -39,7 +39,7 @@ otumat <- as(as.matrix(otu), "matrix")
 mode(otumat) <- "numeric"
 OTU = otu_table(otumat, taxa_are_rows = TRUE)
 otumat
-meta0 = read.table("Data/Andrew16S_mappingfile.txt",
+meta0 = read.table("../Data/Andrew16S_mappingfile.txt",
                   header=TRUE,row.names=1,
                   sep="\t",stringsAsFactors=FALSE)
 head(meta0)
@@ -137,11 +137,11 @@ kw.2
 ```
 
 ```{r}
-otu = read.table(file="~/Documents/Lovegrass_amptk.qiime2/ITS.ASV/FungiAD.otu_table.txt", header=T, sep='\t',row.names = 1)
+otu = read.table(file="../Data/FungiAD.otu_table.txt", header=T, sep='\t',row.names = 1)
 head(otu)
 dim(otu)
 
-tax <- read.table(file="~/Documents/Lovegrass_amptk.qiime2/ITS.ASV/FungiAD.ASVs.taxonomy.fix.txt", sep='\t', header=TRUE,row.names = 1)
+tax <- read.table(file="../Data/FungiAD.ASVs.taxonomy.fix.txt", sep='\t', header=TRUE,row.names = 1)
 head(tax)
 
 dim(tax)
@@ -157,7 +157,7 @@ OTU = otu_table(otumat, taxa_are_rows = TRUE)
 
 otumat
 
-meta0 = read.table("~/Documents/Lovegrass_amptk.qiime2/ITS.ASV/Andrew_ITS.mapping_file.txt",
+meta0 = read.table("../Data/Andrew_ITS.mapping_file.txt",
                   header=TRUE,row.names=1,
                   sep="\t",stringsAsFactors=FALSE)
 meta0
@@ -205,11 +205,11 @@ fun.nov.boer <- subset_samples(fun.nov, Grass == "BOER")
 #Fungi
 
 ```{r}
-otu = read.table(file="Data/FungiAD.otu_table.txt", header=T, sep='\t',row.names = 1)
+otu = read.table(file="../Data/FungiAD.otu_table.txt", header=T, sep='\t',row.names = 1)
 head(otu)
 dim(otu)
 
-tax <- read.table(file="Data/FungiAD.ASVs.taxonomy.fix.txt", sep='\t', header=TRUE,row.names = 1)
+tax <- read.table(file="../Data/FungiAD.ASVs.taxonomy.fix.txt", sep='\t', header=TRUE,row.names = 1)
 head(tax)
 
 dim(tax)
@@ -225,7 +225,7 @@ OTU = otu_table(otumat, taxa_are_rows = TRUE)
 
 otumat
 
-meta0 = read.table("Data/Andrew_ITS.mapping_file.txt",
+meta0 = read.table("../Data/Andrew_ITS.mapping_file.txt",
                   header=TRUE,row.names=1,
                   sep="\t",stringsAsFactors=FALSE)
 meta0
@@ -293,7 +293,13 @@ figure4
 
 ```{r}
 figure4
-ggsave("Figure4.png",width=11,height=10,dpi = 400)
+ggsave("Figure4.png",width=12,height=10,dpi = 400)
+```
+
+```{r warning=FALSE}
+pdf("../Figures/Figure_4.pdf", width = 12, height = 10 )
+figure4
+dev.off()
 ```
 
 ##Fungal stats
