@@ -9,6 +9,24 @@ output: html_document
 setwd("~/Manuscript.Figures")
 ```
 
+```{r}
+library(ape)
+library(vegan)
+library(plyr)
+library(dplyr)
+library(tidyr)
+library(scales)
+library(grid)
+library(reshape2)
+library(phyloseq)
+library(magrittr)
+library(ggplot2)
+library(ggpubr)
+library(data.table)
+library(labdsv)
+```
+
+
 
 ```{r}
 otu = read.table(file="../Data/FungiAD.otu_table.txt", header=T, sep='\t',row.names = 1)
@@ -231,7 +249,7 @@ unique((data_glom.fun.nov.erle2.top6$Class))
 
 ```{r}
 fun.nov.erle <- ggplot(data_glom.fun.nov.erle2.top6,aes(Treatment,Abundance,color=Class)) + geom_boxplot() +
-  scale_color_manual(values = c("indianred1", "lightsalmon","gray26","lightgreen", "lightblue1", "royalblue3")) + 
+  scale_color_manual(values = c("indianred1", "lightsalmon","gray26","lightgreen", "lightblue1", "gray")) + 
   theme_bw(base_size = 20) + labs(y= "", x = "") + 
   ggtitle("B) ERLE Post monsoon")
 ```
