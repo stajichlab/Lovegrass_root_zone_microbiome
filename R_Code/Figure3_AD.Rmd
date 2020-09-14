@@ -6,7 +6,7 @@ output: html_document
 ---
 
 ```{r}
-setwd("~/Manuscript.Figures")
+#setwd("~/Manuscript.Figures")
 ```
 
 ```{r}
@@ -461,7 +461,7 @@ unique((data_glom.fun.nov.boer2.top6$Class))
 fun.nov.boer <- ggplot(data_glom.fun.nov.boer2.top6,aes(Treatment,Abundance,color=Class)) + geom_boxplot() +
   scale_color_manual(values = c("indianred1", "lightsalmon","gray26","lightgreen", "lightblue1", "royalblue3")) + theme_bw(base_size = 20) + 
   labs(y= "", x = "") + 
-  ggtitle("D) BOER Pre monsoon")
+  ggtitle("D) BOER Pre monsoon") + ylim(0, 0.6)
 ```
 
 ```{r}
@@ -483,7 +483,7 @@ figure_3
 ##Save figure 2
 
 ```{r warning=FALSE}
-pdf("../Figures/Figure_3_Pre_Post.pdf", width = 12, height = 10 )
+pdf("../Figures/Figure_3_Pre_Post_0.6ylim.pdf", width = 12, height = 10 )
 figure_3
 dev.off()
 ```
