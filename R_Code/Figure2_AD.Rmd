@@ -6,7 +6,7 @@ output: html_document
 ---
 
 ```{r}
-setwd("~/Manuscript.Figures")
+#setwd("~/Manuscript.Figures")
 ```
 
 ```{r}
@@ -127,7 +127,7 @@ unique(data_glom.bac.june.erle2.top6$Phylum)
 bac.june.erle <- ggplot(data_glom.bac.june.erle2.top6,aes(Treatment,Abundance,color=Phylum)) + geom_boxplot() +
   scale_color_manual(values = c("salmon","darkorange2", "lightgreen", "gray26", "maroon", "steelblue3")) + 
   theme_bw(base_size = 20) + labs(y= "Relative Abundance", x = "") + 
-  ggtitle("A) ERLE Pre monsoon")
+  ggtitle("A) ERLE Pre monsoon") + ylim(0, 0.4)
 ```
 
 ```{r}
@@ -230,7 +230,7 @@ unique(data_glom.bac.nov.erle2.top6$Phylum)
 bac.nov.erle <- ggplot(data_glom.bac.nov.erle2.top6,aes(Treatment,Abundance,color=Phylum)) + geom_boxplot() +
   scale_color_manual(values = c("salmon","darkorange2", "lightgreen", "gray26", "maroon", "steelblue3")) + 
   theme_bw(base_size = 20) + labs(y= "", x = "") + 
-  ggtitle("B) ERLE Post monsoon")
+  ggtitle("B) ERLE Post monsoon") + ylim(0, 0.4)
 ```
 
 ```{r}
@@ -340,7 +340,7 @@ bac.june.boer <- ggplot(data_glom.bac.june.boer2.top6,aes(Treatment,Abundance,co
   scale_color_manual(values = c("salmon","darkorange2", "lightgreen", "gray26", "maroon", "steelblue3")) + 
   theme_bw(base_size = 20) + 
   labs(y= "Relative Abundance", x = "") + 
-  ggtitle("C) BOER Pre monsoon")
+  ggtitle("C) BOER Pre monsoon") + ylim(0, 0.4)
 ```
 
 ```{r}
@@ -440,7 +440,7 @@ unique(data_glom.bac.nov.boer2.top6$Phylum)
 bac.nov.boer <- ggplot(data_glom.bac.nov.boer2.top6,aes(Treatment,Abundance,color=Phylum)) + geom_boxplot() +
   scale_color_manual(values = c("salmon","darkorange2", "lightgreen", "gray26", "hotpink2", "steelblue3")) + theme_bw(base_size = 20) + 
   labs(y= "", x = "") + 
-  ggtitle("D) BOER Pre monsoon")
+  ggtitle("D) BOER Pre monsoon") + ylim(0, 0.4)
 ```
 
 ```{r}
@@ -462,7 +462,7 @@ figure_2
 ##Save figure 2
 
 ```{r warning=FALSE}
-pdf("../Figures/Figure_2_Pre_Post.pdf", width = 12, height = 10 )
+pdf("../Figures/Figure_2_Pre_Post_0.4ylim.pdf", width = 12, height = 10 )
 figure_2
 dev.off()
 ```
