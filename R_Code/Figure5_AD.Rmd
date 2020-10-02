@@ -5,9 +5,7 @@ date: "7/30/2020"
 output: html_document
 ---
 
-```{r}
-setwd("~/Manuscript.Figures")
-```
+
 
 #Bacteria
 
@@ -84,7 +82,9 @@ bac.treat.ord <- ordinate(bacteria.june, "NMDS", "bray")
 
 ```{r}
 bac.ord.june <- plot_ordination(bacteria.june, bac.treat.ord, type = "samples", 
-                color = "Treatment",shape = "Grass") + theme_bw(base_size = 20) + geom_point(size=3)
+                color = "Treatment",shape = "Grass") + theme_bw(base_size = 20) + geom_point(size=3) + scale_color_manual(values=c("#00BA38", "#619CFF", "#F8766D")) 
+
+  
 ```
 
 ```{r}
@@ -107,7 +107,8 @@ bac.treat.ord.n <- ordinate(bacteria.nov, "NMDS", "bray")
 
 ```{r}
 bac.ord.nov <- plot_ordination(bacteria.nov, bac.treat.ord.n, type = "samples", 
-                color = "Treatment",shape = "Grass") + theme_bw(base_size = 20) + geom_point(size=3)
+                color = "Treatment",shape = "Grass") + theme_bw(base_size = 20) + geom_point(size=3) +
+  scale_color_manual(values=c("#00BA38", "#619CFF", "#F8766D"))
 ```
 
 ```{r}
@@ -220,7 +221,7 @@ NMDS.fun.treat.j = data.frame(MDS1 = MDS1, MDS2 = MDS2, Grass = fun.treat.df.j$G
 
 
 ```{r}
-fun.ord.june <- ggplot(NMDS.fun.treat.j, aes(x=MDS1,y=MDS2,col=Treatment,pch=Grass)) + geom_point(size=3) + theme_bw(base_size = 20)
+fun.ord.june <- ggplot(NMDS.fun.treat.j, aes(x=MDS1,y=MDS2,col=Treatment,pch=Grass)) + geom_point(size=3) + theme_bw(base_size = 20) + scale_color_manual(values=c("#00BA38", "#619CFF", "#F8766D"))
 ```
 
 ```{r}
@@ -263,7 +264,7 @@ NMDS.fun.treat.n = data.frame(MDS1 = MDS1, MDS2 = MDS2, Grass = fun.treat.df.n$G
 ```
 
 ```{r}
-fun.ord.nov <- ggplot(NMDS.fun.treat.n, aes(x=MDS1,y=MDS2,col=Treatment,pch=Grass)) + geom_point(size=3) + theme_bw(base_size = 20)
+fun.ord.nov <- ggplot(NMDS.fun.treat.n, aes(x=MDS1,y=MDS2,col=Treatment,pch=Grass)) + geom_point(size=3) + theme_bw(base_size = 20) + scale_color_manual(values=c("#00BA38", "#619CFF", "#F8766D"))
 ```
 
 ```{r}
