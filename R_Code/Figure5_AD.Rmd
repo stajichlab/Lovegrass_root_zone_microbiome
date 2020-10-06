@@ -299,7 +299,7 @@ figure_5
 ```
 
 ```{r warning=FALSE}
-pdf("../Figures/Figure_5_ordination.pdf", width = 12, height = 10 )
+pdf("../Figures/Figure_5_new_color.pdf", width = 12, height = 10 )
 figure_5
 dev.off()
 ```
